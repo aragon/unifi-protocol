@@ -8,16 +8,25 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC7575} from "./interfaces/IERC7575.sol";
+import {IERC7540Operator, IERC7540Redeem} from "./interfaces/IERC7540.sol";
 import {ERC7575Share} from "./ERC7575Share.sol";
 
-contract VaultaireVault is IERC7575, DaoAuthorizable {
+contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     using Math for uint256;
 
     ERC7575Share internal immutable _share;
     IERC20 internal immutable _asset;
 
     uint256 internal internalShares = 0;
+
+    /// IERC7540Operator Storage
+    /// @dev Assume requests are non-fungible and all have ID = 0
+    uint256 internal constant REQUEST_ID = 0;
+    mapping(address => mapping(address => bool)) public isOperator;
+    mapping(address controller => mapping(bytes32 nonce => bool used)) public authorizations;
 
     /**
      * @dev Attempted to deposit more assets than the max amount for `receiver`.
@@ -44,7 +53,7 @@ contract VaultaireVault is IERC7575, DaoAuthorizable {
     /// @param value The amount of shares the spender attempted to transfer.
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
 
-    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) DaoAuthorizable(_dao) {
+    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) DaoAuthorizable(_dao) EIP712("VaultaireVault", "1") {
         _asset = asset_;
         _share = share_;
     }
@@ -254,8 +263,86 @@ contract VaultaireVault is IERC7575, DaoAuthorizable {
         }
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           ERC7540 LOGIC
+       //////////////////////////////////////////////////////////////*/
+
+    function setOperator(address operator, bool approved) public virtual returns (bool success) {
+        require(msg.sender != operator, "ERC7540Vault/cannot-set-self-as-operator");
+        isOperator[msg.sender][operator] = approved;
+        emit OperatorSet(msg.sender, operator, approved);
+        success = true;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           EIP-7441 LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    // solhint-disable-next-line func-name-mixedcase
+    function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
+        return _domainSeparatorV4();
+    }
+
+    function authorizeOperator(
+        address controller,
+        address operator,
+        bool approved,
+        bytes32 nonce,
+        uint256 deadline,
+        bytes memory signature
+    ) public virtual returns (bool success) {
+        require(controller != operator, "ERC7540Vault/cannot-set-self-as-operator");
+        require(block.timestamp <= deadline, "ERC7540Vault/expired");
+        require(!authorizations[controller][nonce], "ERC7540Vault/authorization-used");
+
+        authorizations[controller][nonce] = true;
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(signature, 0x20))
+            s := mload(add(signature, 0x40))
+            v := byte(0, mload(add(signature, 0x60)))
+        }
+
+        address recoveredAddress = ecrecover(
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR(),
+                    keccak256(
+                        abi.encode(
+                            keccak256(
+                                "AuthorizeOperator(address controller,address operator,bool approved,bytes32 nonce,uint256 deadline)"
+                            ),
+                            controller,
+                            operator,
+                            approved,
+                            nonce,
+                            deadline
+                        )
+                    )
+                )
+            ),
+            v,
+            r,
+            s
+        );
+
+        require(recoveredAddress != address(0) && recoveredAddress == controller, "INVALID_SIGNER");
+
+        isOperator[controller][operator] = approved;
+
+        emit OperatorSet(controller, operator, approved);
+
+        success = true;
+    }
+
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        if (interfaceId == type(IERC7575).interfaceId) return true;
-        return false;
+        return
+            interfaceId == type(IERC7540Operator).interfaceId ||
+            interfaceId == type(IERC7575).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 }
