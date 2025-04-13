@@ -1,2 +1,5 @@
 @openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
+@aragon/commons/=node_modules/@aragon/osx-commons-repo/contracts/src/
 forge-std/=node_modules/forge-std/
+solmate/=node_modules/solmate/src/
+@openzeppelin/community-contracts/=node_modules/@openzeppelin/community-contracts/contracts/

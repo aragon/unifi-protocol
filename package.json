@@ -7,7 +7,10 @@
     "url": "https://github.com/PaulRBerg"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@aragon/osx-commons-repo": "github:aragon/osx-commons",
+    "@openzeppelin/community-contracts": "OpenZeppelin/openzeppelin-community-contracts",
+    "@openzeppelin/contracts": "^5.0.1",
+    "solmate": "^6.8.0"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
