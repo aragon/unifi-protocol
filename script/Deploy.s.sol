@@ -26,6 +26,7 @@ contract Deploy is BaseScript {
     {
         address dao = vm.envAddress("DAO");
         address user = vm.envAddress("USER");
+        uint32 vaultTimestamp = uint32(vm.envUint("VAULT_TIMESTAMP"));
         address tokenBridge = address(this);
 
         // 1. Deploying Mock Tokens
@@ -50,10 +51,10 @@ contract Deploy is BaseScript {
         share = new ERC7575Share(tokenBridge, IDAO(dao));
 
         // 2. Deploying the first vault
-        fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao));
-        fUSDsVault = new VaultaireVault(asset2, share, IDAO(dao));
-        fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao));
-        fGHOVault = new VaultaireVault(asset4, share, IDAO(dao));
+        fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao), vaultTimestamp);
+        fUSDsVault = new VaultaireVault(asset2, share, IDAO(dao), vaultTimestamp);
+        fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao), vaultTimestamp);
+        fGHOVault = new VaultaireVault(asset4, share, IDAO(dao), vaultTimestamp);
 
         // 3. I need to manually call the DAO to assign the permissions for now
     }

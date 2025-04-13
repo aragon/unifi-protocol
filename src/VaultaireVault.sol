@@ -14,7 +14,7 @@ import {IERC7575} from "./interfaces/IERC7575.sol";
 import {IERC7540Operator, IERC7540Redeem} from "./interfaces/IERC7540.sol";
 import {ERC7575Share} from "./ERC7575Share.sol";
 
-contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
+contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540Redeem, EIP712 {
     using Math for uint256;
 
     ERC7575Share internal immutable _share;
@@ -27,6 +27,17 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     uint256 internal constant REQUEST_ID = 0;
     mapping(address => mapping(address => bool)) public isOperator;
     mapping(address controller => mapping(bytes32 nonce => bool used)) public authorizations;
+
+    /// IERC7540Redeem Storage
+    uint32 public timelock;
+    uint256 internal _totalPendingRedeemAssets;
+    mapping(address => RedemptionRequest) internal _pendingRedemption;
+
+    struct RedemptionRequest {
+        uint256 assets;
+        uint256 shares;
+        uint32 claimableTimestamp;
+    }
 
     /**
      * @dev Attempted to deposit more assets than the max amount for `receiver`.
@@ -53,9 +64,15 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     /// @param value The amount of shares the spender attempted to transfer.
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
 
-    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) DaoAuthorizable(_dao) EIP712("VaultaireVault", "1") {
+    constructor(
+        IERC20 asset_,
+        ERC7575Share share_,
+        IDAO _dao,
+        uint32 _timelock
+    ) DaoAuthorizable(_dao) EIP712("VaultaireVault", "1") {
         _asset = asset_;
         _share = share_;
+        timelock = _timelock;
     }
 
     // @inheritdoc IERC7575
@@ -99,13 +116,21 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     }
 
     // @inheritdoc IERC7575
-    function maxRedeem(address owner) public view virtual returns (uint256) {
-        return _asset.balanceOf(owner);
+    function maxRedeem(address controller) public view virtual returns (uint256) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp <= block.timestamp) {
+            return request.shares;
+        }
+        return 0;
     }
 
     // @inheritdoc IERC7575
-    function maxWithdraw(address owner) public view virtual returns (uint256) {
-        return _convertToAssets(_asset.balanceOf(owner), Math.Rounding.Floor);
+    function maxWithdraw(address controller) public view virtual returns (uint256) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp <= block.timestamp) {
+            return request.assets;
+        }
+        return 0;
     }
 
     // @inheritdoc IERC7575
@@ -119,13 +144,13 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     }
 
     // @inheritdoc IERC7575
-    function previewWithdraw(uint256 assets) public view virtual returns (uint256) {
-        return _convertToShares(assets, Math.Rounding.Ceil);
+    function previewWithdraw(uint256) public view virtual returns (uint256) {
+        revert("ERC7540Vault/async-flow");
     }
 
     // @inheritdoc IERC7575
-    function previewRedeem(uint256 shares) public view virtual returns (uint256) {
-        return _convertToAssets(shares, Math.Rounding.Floor);
+    function previewRedeem(uint256) public view virtual returns (uint256) {
+        revert("ERC7540Vault/async-flow");
     }
 
     // @inheritdoc IERC7575
@@ -155,27 +180,48 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
     }
 
     // @inheritdoc IERC7575
-    function withdraw(uint256 assets, address receiver, address owner) public virtual returns (uint256) {
-        uint256 maxAssets = maxWithdraw(owner);
+    function withdraw(uint256 assets, address receiver, address controller) public virtual returns (uint256) {
+        require(controller == msg.sender || isOperator[controller][msg.sender], "ERC7540Vault/invalid-caller");
+        require(assets != 0, "Must claim nonzero amount");
+
+        uint256 maxAssets = maxWithdraw(controller);
         if (assets > maxAssets) {
-            revert ExceededMaxWithdraw(owner, assets, maxAssets);
+            revert ExceededMaxWithdraw(controller, assets, maxAssets);
         }
 
-        uint256 shares = previewWithdraw(assets);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        RedemptionRequest storage request = _pendingRedemption[controller];
+
+        // Claiming partially introduces precision loss. The user therefore receives a rounded down amount,
+        // while the claimable balance is reduced by a rounded up amount.
+        uint256 shares = assets.mulDiv(request.shares, request.assets, Math.Rounding.Floor);
+        uint256 sharesUp = assets.mulDiv(request.shares, request.assets, Math.Rounding.Ceil);
+        request.assets -= assets;
+        request.shares = request.shares > sharesUp ? request.shares - sharesUp : 0;
+
+        _withdraw(_msgSender(), receiver, controller, assets, shares);
 
         return shares;
     }
 
     // @inheritdoc IERC7575
-    function redeem(uint256 shares, address receiver, address owner) public virtual returns (uint256) {
-        uint256 maxShares = maxRedeem(owner);
+    function redeem(uint256 shares, address receiver, address controller) public virtual returns (uint256) {
+        require(controller == msg.sender || isOperator[controller][msg.sender], "ERC7540Vault/invalid-caller");
+        require(shares != 0, "Must claim nonzero amount");
+
+        uint256 maxShares = maxRedeem(controller);
         if (shares > maxShares) {
-            revert ExceededMaxRedeem(owner, shares, maxShares);
+            revert ExceededMaxRedeem(controller, shares, maxShares);
         }
 
-        uint256 assets = previewRedeem(shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        RedemptionRequest storage request = _pendingRedemption[controller];
+
+        uint256 assets = shares.mulDiv(request.assets, request.shares, Math.Rounding.Floor);
+        uint256 assetsUp = shares.mulDiv(request.assets, request.shares, Math.Rounding.Ceil);
+
+        request.assets = request.assets > assetsUp ? request.assets - assetsUp : 0;
+        request.shares -= shares;
+
+        _withdraw(_msgSender(), receiver, controller, assets, shares);
 
         return assets;
     }
@@ -226,18 +272,7 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
         uint256 assets,
         uint256 shares
     ) internal virtual {
-        if (caller != owner) {
-            _spendAllowance(owner, caller, shares);
-        }
-
-        // If asset() is ERC-777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
-        // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
-        // calls the vault, which is assumed not malicious.
-        //
-        // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
-        // shares are burned and after the assets are transferred, which is a valid state.
-        internalShares -= shares;
-        _share.burn(owner, shares);
+        _totalPendingRedeemAssets -= assets;
         SafeERC20.safeTransfer(_asset, receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
@@ -337,6 +372,66 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, EIP712 {
         emit OperatorSet(controller, operator, approved);
 
         success = true;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ERC7540 LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    function requestRedeem(uint256 shares, address controller, address owner) external returns (uint256 requestId) {
+        require(owner == msg.sender || isOperator[owner][msg.sender], "ERC7540Vault/invalid-owner");
+
+        require(maxRedeem(owner) >= shares, "ERC7540Vault/insufficient-balance");
+        require(shares != 0, "ZERO_SHARES");
+
+        uint256 assets = _convertToAssets(shares, Math.Rounding.Floor);
+
+        // SafeERC20.safeTransferFrom(_asset, owner, address(this), shares);
+        _share.burn(owner, shares);
+        internalShares -= shares;
+
+        RedemptionRequest storage request = _pendingRedemption[controller];
+
+        // If there's an existing request, we update it and reset timelock
+        if (request.shares > 0) {
+            request.assets += assets;
+            request.shares += shares;
+            // Reset timelock to ensure enough time for the new request
+            request.claimableTimestamp = uint32(block.timestamp) + timelock;
+        } else {
+            _pendingRedemption[controller] = RedemptionRequest({
+                assets: assets,
+                shares: shares,
+                claimableTimestamp: uint32(block.timestamp) + timelock
+            });
+        }
+
+        _totalPendingRedeemAssets += assets;
+
+        emit RedeemRequest(controller, owner, REQUEST_ID, msg.sender, shares);
+        return REQUEST_ID;
+    }
+
+    function pendingRedeemRequest(uint256, address controller) public view returns (uint256 pendingShares) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp > block.timestamp) {
+            return request.shares;
+        }
+        return 0;
+    }
+
+    function claimableRedeemRequest(uint256, address controller) public view returns (uint256 claimableShares) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp <= block.timestamp && request.shares > 0) {
+            return request.shares;
+        }
+        return 0;
+    }
+
+    function setTimelock(uint32 timelock_) public {
+        if (msg.sender == address(dao())) {
+            timelock = timelock_;
+        }
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
