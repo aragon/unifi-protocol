@@ -63,6 +63,57 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
     /// @param currentAllowance The current allowance granted to the spender.
     /// @param value The amount of shares the spender attempted to transfer.
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
+    /**
+     * @dev Error thrown when attempting to redeem more shares than the owner has available.
+     * @param owner The address of the share owner
+     * @param requested The amount of shares requested to redeem
+     * @param available The maximum amount of shares available for redemption
+     */
+    error InsufficientRedeemableBalance(address owner, uint256 requested, uint256 available);
+    /**
+     * @dev Error thrown when trying to preview a withdraw or redeem operation in an asynchronous vault.
+     */
+    error SyncFlowNotSupported();
+    /**
+     * @dev Error thrown when an address attempts to set itself as its own operator.
+     * @param sender The address attempting the invalid operation
+     */
+    error CannotSetSelfAsOperator(address sender);
+    /**
+     * @dev Error thrown when a caller is neither the controller nor an authorized operator.
+     * @param caller The address attempting the operation
+     * @param controller The controller address that would be needed for authorization
+     */
+    error InvalidCaller(address caller, address controller);
+    /**
+     * @dev Error thrown when a caller is neither the owner nor an authorized operator of the owner.
+     * @param caller The address attempting the operation
+     * @param owner The owner address for which authorization would be needed
+     */
+    error InvalidOwner(address caller, address owner);
+    /**
+     * @dev Error thrown when attempting to claim zero assets or shares.
+     */
+    error ZeroAmountClaim();
+    /**
+     * @dev Error thrown when an authorization is attempted after the deadline has expired.
+     * @param currentTime The current timestamp when the transaction was executed
+     * @param deadline The deadline timestamp that was exceeded
+     */
+    error AuthorizationExpired(uint256 currentTime, uint256 deadline);
+
+    /**
+     * @dev Error thrown when attempting to use an authorization nonce that has already been used.
+     * @param controller The controller address of the authorization
+     * @param nonce The nonce that was already used
+     */
+    error AuthorizationNonceUsed(address controller, bytes32 nonce);
+    /**
+     * @dev Error thrown when signature verification fails during authorization.
+     * @param expectedSigner The controller address that should have signed the message
+     * @param recoveredSigner The address recovered from the signature (may be address(0) if recovery failed)
+     */
+    error InvalidSignature(address expectedSigner, address recoveredSigner);
 
     constructor(
         IERC20 asset_,
@@ -118,18 +169,14 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
     // @inheritdoc IERC7575
     function maxRedeem(address controller) public view virtual returns (uint256) {
         RedemptionRequest memory request = _pendingRedemption[controller];
-        if (request.claimableTimestamp <= block.timestamp) {
-            return request.shares;
-        }
+        if (request.claimableTimestamp <= block.timestamp) return request.shares;
         return 0;
     }
 
     // @inheritdoc IERC7575
     function maxWithdraw(address controller) public view virtual returns (uint256) {
         RedemptionRequest memory request = _pendingRedemption[controller];
-        if (request.claimableTimestamp <= block.timestamp) {
-            return request.assets;
-        }
+        if (request.claimableTimestamp <= block.timestamp) return request.assets;
         return 0;
     }
 
@@ -145,20 +192,18 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
 
     // @inheritdoc IERC7575
     function previewWithdraw(uint256) public view virtual returns (uint256) {
-        revert("ERC7540Vault/async-flow");
+        revert SyncFlowNotSupported();
     }
 
     // @inheritdoc IERC7575
     function previewRedeem(uint256) public view virtual returns (uint256) {
-        revert("ERC7540Vault/async-flow");
+        revert SyncFlowNotSupported();
     }
 
     // @inheritdoc IERC7575
     function deposit(uint256 assets, address receiver) external override returns (uint256) {
         uint256 maxAssets = maxDeposit(receiver);
-        if (assets > maxAssets) {
-            revert ExceededMaxDeposit(receiver, assets, maxAssets);
-        }
+        if (assets > maxAssets) revert ExceededMaxDeposit(receiver, assets, maxAssets);
 
         uint256 shares = previewDeposit(assets);
         _deposit(_msgSender(), receiver, assets, shares);
@@ -169,9 +214,7 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
     // @inheritdoc IERC7575
     function mint(uint256 shares, address receiver) public virtual returns (uint256) {
         uint256 maxShares = maxMint(receiver);
-        if (shares > maxShares) {
-            revert ExceededMaxMint(receiver, shares, maxShares);
-        }
+        if (shares > maxShares) revert ExceededMaxMint(receiver, shares, maxShares);
 
         uint256 assets = previewMint(shares);
         _deposit(_msgSender(), receiver, assets, shares);
@@ -181,13 +224,13 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
 
     // @inheritdoc IERC7575
     function withdraw(uint256 assets, address receiver, address controller) public virtual returns (uint256) {
-        require(controller == msg.sender || isOperator[controller][msg.sender], "ERC7540Vault/invalid-caller");
-        require(assets != 0, "Must claim nonzero amount");
+        if (controller != msg.sender && !isOperator[controller][msg.sender])
+            revert InvalidCaller(msg.sender, controller);
+
+        if (assets == 0) revert ZeroAmountClaim();
 
         uint256 maxAssets = maxWithdraw(controller);
-        if (assets > maxAssets) {
-            revert ExceededMaxWithdraw(controller, assets, maxAssets);
-        }
+        if (assets > maxAssets) revert ExceededMaxWithdraw(controller, assets, maxAssets);
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
@@ -205,13 +248,13 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
 
     // @inheritdoc IERC7575
     function redeem(uint256 shares, address receiver, address controller) public virtual returns (uint256) {
-        require(controller == msg.sender || isOperator[controller][msg.sender], "ERC7540Vault/invalid-caller");
-        require(shares != 0, "Must claim nonzero amount");
+        if (controller != msg.sender && !isOperator[controller][msg.sender])
+            revert InvalidCaller(msg.sender, controller);
+
+        if (shares == 0) revert ZeroAmountClaim();
 
         uint256 maxShares = maxRedeem(controller);
-        if (shares > maxShares) {
-            revert ExceededMaxRedeem(controller, shares, maxShares);
-        }
+        if (shares > maxShares) revert ExceededMaxRedeem(controller, shares, maxShares);
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
@@ -303,7 +346,10 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
        //////////////////////////////////////////////////////////////*/
 
     function setOperator(address operator, bool approved) public virtual returns (bool success) {
-        require(msg.sender != operator, "ERC7540Vault/cannot-set-self-as-operator");
+        if (msg.sender == operator) {
+            revert CannotSetSelfAsOperator(msg.sender);
+        }
+
         isOperator[msg.sender][operator] = approved;
         emit OperatorSet(msg.sender, operator, approved);
         success = true;
@@ -326,9 +372,10 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
         uint256 deadline,
         bytes memory signature
     ) public virtual returns (bool success) {
-        require(controller != operator, "ERC7540Vault/cannot-set-self-as-operator");
-        require(block.timestamp <= deadline, "ERC7540Vault/expired");
-        require(!authorizations[controller][nonce], "ERC7540Vault/authorization-used");
+        if (msg.sender == operator) revert CannotSetSelfAsOperator(msg.sender);
+
+        if (block.timestamp > deadline) revert AuthorizationExpired(block.timestamp, deadline);
+        if (authorizations[controller][nonce]) revert AuthorizationNonceUsed(controller, nonce);
 
         authorizations[controller][nonce] = true;
 
@@ -365,7 +412,8 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
             s
         );
 
-        require(recoveredAddress != address(0) && recoveredAddress == controller, "INVALID_SIGNER");
+        if (recoveredAddress == address(0) || recoveredAddress != controller)
+            revert InvalidSignature(controller, recoveredAddress);
 
         isOperator[controller][operator] = approved;
 
@@ -379,10 +427,11 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
     //////////////////////////////////////////////////////////////*/
 
     function requestRedeem(uint256 shares, address controller, address owner) external returns (uint256 requestId) {
-        require(owner == msg.sender || isOperator[owner][msg.sender], "ERC7540Vault/invalid-owner");
+        if (owner != msg.sender && !isOperator[owner][msg.sender]) revert InvalidOwner(msg.sender, owner);
 
-        require(maxRedeem(owner) >= shares, "ERC7540Vault/insufficient-balance");
-        require(shares != 0, "ZERO_SHARES");
+        uint256 available = maxRedeem(owner);
+        if (available < shares) revert InsufficientRedeemableBalance(owner, shares, available);
+        if (shares == 0) revert ZeroAmountClaim();
 
         uint256 assets = _convertToAssets(shares, Math.Rounding.Floor);
 
