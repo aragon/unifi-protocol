@@ -429,7 +429,7 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
     function requestRedeem(uint256 shares, address controller, address owner) external returns (uint256 requestId) {
         if (owner != msg.sender && !isOperator[owner][msg.sender]) revert InvalidOwner(msg.sender, owner);
 
-        uint256 available = maxRedeem(owner);
+        uint256 available = _asset.balanceOf(owner);
         if (available < shares) revert InsufficientRedeemableBalance(owner, shares, available);
         if (shares == 0) revert ZeroAmountClaim();
 
