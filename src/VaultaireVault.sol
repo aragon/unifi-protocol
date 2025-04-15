@@ -273,7 +273,12 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
      * @dev Internal conversion function (from assets to shares) with support for rounding direction.
      */
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view virtual returns (uint256) {
-        return assets.mulDiv(totalInternalShares() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
+        return
+            assets.mulDiv(
+                totalInternalShares() + 10 ** _decimalsOffset(),
+                totalAssets() - _totalPendingRedeemAssets + 1,
+                rounding
+            );
     }
 
     /**
@@ -475,6 +480,22 @@ contract VaultaireVault is IERC7575, DaoAuthorizable, IERC7540Operator, IERC7540
             return request.shares;
         }
         return 0;
+    }
+
+    function pendingRedeemRequestData(address controller) public view returns (RedemptionRequest memory) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp <= block.timestamp) {
+            revert ZeroAmountClaim();
+        }
+        return request;
+    }
+
+    function claimableRedeemRequestData(address controller) public view returns (RedemptionRequest memory) {
+        RedemptionRequest memory request = _pendingRedemption[controller];
+        if (request.claimableTimestamp > block.timestamp || request.shares <= 0) {
+            revert ZeroAmountClaim();
+        }
+        return request;
     }
 
     function setTimelock(uint32 timelock_) public {
