@@ -115,6 +115,8 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         request.assets -= assets;
         request.shares = request.shares > sharesUp ? request.shares - sharesUp : 0;
 
+        _beforeWithdraw(assets);
+
         _withdraw(_msgSender(), receiver, controller, assets, shares);
 
         return shares;
@@ -248,5 +250,15 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         if (msg.sender == address(dao())) {
             timelock = timelock_;
         }
+    }
+
+    /**
+     * @dev Hook that is called before withdrawing assets from the vault.
+     *
+     * @param assets The amount of assets withdrawing.
+     */
+    function _beforeWithdraw(uint256 assets) internal {
+        // Custom logic before withdrawal
+        _deallocate(assets);
     }
 }

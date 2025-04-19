@@ -2,7 +2,7 @@
 pragma solidity >=0.8.29;
 
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
-import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import {SingleStrategyManager} from "./SingleStrategyManager.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -16,7 +16,7 @@ import {ERC7575Share} from "../ERC7575Share.sol";
  * @title VaultaireCore
  * @dev Core implementation of ERC7575 vault functionality
  */
-abstract contract VaultCore is IERC7575, DaoAuthorizable {
+abstract contract VaultCore is IERC7575, SingleStrategyManager {
     using Math for uint256;
 
     ERC7575Share internal immutable _share;
@@ -54,7 +54,7 @@ abstract contract VaultCore is IERC7575, DaoAuthorizable {
      */
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
 
-    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) DaoAuthorizable(_dao) {
+    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) SingleStrategyManager(_dao) {
         _asset = asset_;
         _share = share_;
     }
@@ -127,6 +127,7 @@ abstract contract VaultCore is IERC7575, DaoAuthorizable {
         uint256 shares = previewDeposit(assets);
         _deposit(_msgSender(), receiver, assets, shares);
 
+        _afterDeposit(assets);
         return shares;
     }
 
@@ -170,6 +171,15 @@ abstract contract VaultCore is IERC7575, DaoAuthorizable {
         _share.mint(receiver, shares);
 
         emit Deposit(caller, receiver, assets, shares);
+    }
+
+    /**
+     * @dev Hook that is called after depositing assets into the vault.
+     *
+     * @param assets The amount of assets deposited.
+     */
+    function _afterDeposit(uint256 assets) internal {
+        _allocate(_asset, assets);
     }
 
     /**

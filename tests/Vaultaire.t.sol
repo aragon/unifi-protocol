@@ -11,7 +11,6 @@ import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
 import {MintableERC20} from "./mocks/MintableERC20.sol";
 import {DAO} from "@aragon/osx/core/dao/DAO.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
 
 import {createTestDAO} from "./mocks/MockDAO.sol";
 

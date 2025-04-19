@@ -10,7 +10,7 @@ import "@aragon/commons/dao/IDAO.sol";
 import {MockERC4626} from "./mocks/MockERC4626.sol";
 
 import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
+// import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
 import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
 import {DAO} from "@aragon/osx/core/dao/DAO.sol";
 import {createTestDAO} from "./mocks/MockDAO.sol";
@@ -32,8 +32,8 @@ contract BaseVaultaireTest is Test {
     MintableERC20 asset;
     ERC7575Share share;
     VaultaireVault vault;
-    SingleStrategyManager strategyManager;
     ERC4626Strategy strategy;
+    MockERC4626 lendingVault;
 
     constructor() {
         // Create test accounts
@@ -65,18 +65,13 @@ contract BaseVaultaireTest is Test {
         dao.grant(address(share), address(vault), share.VAULT_ROLE());
         vm.stopPrank();
 
-        // Deploy strategy manager
-        vm.startPrank(deployer);
-        strategyManager = new SingleStrategyManager(vault, dao);
-        vm.stopPrank();
-
         // Deploy strategy
         vm.startPrank(deployer);
-        MockERC4626 fakeVault = new MockERC4626(address(asset));
-        strategy = new ERC4626Strategy(asset, vault, fakeVault, dao);
+        lendingVault = new MockERC4626(address(asset));
+        strategy = new ERC4626Strategy(asset, vault, lendingVault, dao);
         vm.stopPrank();
         vm.startPrank(address(dao));
-        strategyManager.setStrategy(IVaultAllocationStrategy(strategy));
+        vault.setStrategy(IVaultAllocationStrategy(strategy));
         vm.stopPrank();
 
         // Mint initial assets to test users
