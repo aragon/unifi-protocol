@@ -1,15 +1,12 @@
-# Foundry Template [![Open in Gitpod][gitpod-badge]][gitpod] [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# Unifi Protocol   [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
-[gitpod]: https://gitpod.io/#https://github.com/PaulRBerg/foundry-template
-[gitpod-badge]: https://img.shields.io/badge/Gitpod-Open%20in%20Gitpod-FFB45B?logo=gitpod
-[gha]: https://github.com/PaulRBerg/foundry-template/actions
-[gha-badge]: https://github.com/PaulRBerg/foundry-template/actions/workflows/ci.yml/badge.svg
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-A Foundry-based template for developing Solidity smart contracts, with sensible defaults.
+Unifi is a modular and extensible vault system designed for decentralized finance (DeFi) applications.
+
 
 ## What's Inside
 
@@ -28,22 +25,13 @@ create a new repository with this repo as the initial state.
 Or, if you prefer to install the template manually:
 
 ```sh
-$ forge init --template PaulRBerg/foundry-template my-project
-$ cd my-project
 $ bun install # install Solhint, Prettier, and other Node.js deps
+$ forge build
+$ forge test
 ```
 
 If this is your first time with Foundry, check out the
 [installation](https://github.com/foundry-rs/foundry#installation) instructions.
-
-## Features
-
-This template builds upon the frameworks and libraries mentioned above, so please consult their respective documentation
-for details about their specific features.
-
-For example, if you're interested in exploring Foundry in more detail, you should look at the
-[Foundry Book](https://book.getfoundry.sh). In particular, you may be interested in reading the
-[Writing Tests](https://book.getfoundry.sh/forge/writing-tests.html) tutorial.
 
 ### Sensible Defaults
 
@@ -59,14 +47,6 @@ following files:
 ├── foundry.toml
 └── remappings.txt
 ```
-
-### VSCode Integration
-
-This template is IDE agnostic, but for the best user experience, you may want to use it in VSCode alongside Nomic
-Foundation's [Solidity extension](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity).
-
-For guidance on how to integrate a Foundry project in VSCode, please refer to this
-[guide](https://book.getfoundry.sh/config/vscode).
 
 ### GitHub Actions
 
