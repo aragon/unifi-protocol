@@ -34,6 +34,10 @@ contract VaultaireVault is VaultAuth, VaultRedeem {
         // Constructor logic is handled by parent contracts
     }
 
+    function totalAssets() public view override returns (uint256 totalManagedAssets) {
+        return _asset.balanceOf(address(this)) + currentlyInvested;
+    }
+
     /**
      * @dev Implementation of ERC-165 interface detection
      */

@@ -54,7 +54,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
     }
 
     // @inheritdoc VaultaireCore
-    function totalAssets() public view override returns (uint256 totalManagedAssets) {
+    function totalAssets() public view virtual override returns (uint256 totalManagedAssets) {
         return _asset.balanceOf(address(this));
     }
 

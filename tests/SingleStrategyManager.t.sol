@@ -40,4 +40,35 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
         assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
     }
+
+    function test_VaultStrategyWithdraw() external {
+        uint256 depositAmount = 10 ether;
+
+        // User1 approves and deposits assets into the vault
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+
+        // Expect Deposit event to be emitted
+        vm.expectEmit(true, true, false, true);
+        emit IERC7575.Deposit(user1, user1, depositAmount, depositAmount);
+
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 2000000000000000000);
+        assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
+        assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
+        assertEq(vault.totalAssets(), depositAmount);
+
+        // User1 withdraws assets from the vault
+        vm.startPrank(user1);
+        vault.requestRedeem(depositAmount, user1, user1);
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        vault.withdraw(depositAmount, user1, user1);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 0);
+        assertEq(asset.balanceOf(address(lendingVault)), 0);
+        assertEq(lendingVault.balanceOf(address(strategy)), 0);
+    }
 }

@@ -19,6 +19,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
     // Determines how much of new deposits get allocated to the strategy
     // uint256 public investmentRatio = 8000; // To 80%
     uint256 public investmentRatio = 0; // Default 0%
+    uint256 public currentlyInvested = 0;
 
     event PortfolioRebalanced(uint256 investmentRatio, uint256 assetsAllocated, uint256 assetsDeallocated);
     event StrategySet(IVaultAllocationStrategy strategy);
@@ -62,7 +63,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
     /**
      * @notice Returns the active strategy.
      */
-    function getStrategy() external view returns (IVaultAllocationStrategy strategy) {
+    function getStrategy() public view returns (IVaultAllocationStrategy strategy) {
         return _strategy;
     }
 
@@ -79,6 +80,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
 
         asset.approve(address(_strategy), amountToInvest);
         totalAllocated = _strategy.invest(amountToInvest);
+        currentlyInvested += totalAllocated;
 
         return totalAllocated;
     }
@@ -90,6 +92,8 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         if (address(_strategy) == address(0)) return 0;
 
         totalDeallocated = _strategy.divest(assets);
+        currentlyInvested -= totalDeallocated;
+
         return totalDeallocated;
     }
 
