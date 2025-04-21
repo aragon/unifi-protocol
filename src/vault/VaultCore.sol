@@ -60,7 +60,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
     }
 
     // @inheritdoc IERC7575
-    function asset() external view override returns (address assetTokenAddress) {
+    function asset() public view override(IERC7575, SingleStrategyManager) returns (address assetTokenAddress) {
         return address(_asset);
     }
 
@@ -179,7 +179,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
      * @param assets The amount of assets deposited.
      */
     function _afterDeposit(uint256 assets) internal {
-        _allocate(_asset, assets);
+        _allocate(assets);
     }
 
     /**

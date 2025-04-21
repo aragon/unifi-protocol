@@ -71,14 +71,14 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      * @notice Allocates `assets` to the active strategy based on current investment ratio.
      * @dev This will allocate a portion of the assets according to the investmentRatio.
      */
-    function _allocate(IERC20 asset, uint256 assets) internal returns (uint256 totalAllocated) {
+    function _allocate(uint256 assets) internal returns (uint256 totalAllocated) {
         if (address(_strategy) == address(0)) return 0;
 
         // Calculate how much to actually invest based on the ratio
         uint256 amountToInvest = (assets * investmentRatio) / 10000;
         if (amountToInvest == 0) return 0;
 
-        asset.approve(address(_strategy), amountToInvest);
+        IERC20(asset()).approve(address(_strategy), amountToInvest);
         totalAllocated = _strategy.invest(amountToInvest);
         currentlyInvested += totalAllocated;
 
@@ -105,6 +105,8 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         _strategy.harvest();
     }
 
+    function asset() public view virtual returns (address);
+
     /**
      * @notice Rebalances the assets between vault and strategy according to the current investment ratio.
      * @dev This can be called by the DAO to adjust allocations after changing investment ratios.
@@ -112,12 +114,11 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      * @return assetsDeallocated Amount of assets moved from the strategy to the vault, if any.
      */
     function _rebalance() internal returns (uint256 assetsAllocated, uint256 assetsDeallocated) {
-        /*
         if (address(_strategy) == address(0)) return (0, 0);
 
         // Get current asset balances
-        IERC20 asset = IERC20(vault.asset());
-        uint256 vaultBalance = asset.balanceOf(address(vault));
+        IERC20 _asset = IERC20(asset());
+        uint256 vaultBalance = _asset.balanceOf(address(this));
         uint256 strategyBalance = _strategy.totalManagedAssets();
         uint256 totalAssets = vaultBalance + strategyBalance;
 
@@ -147,7 +148,6 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         }
 
         emit PortfolioRebalanced(investmentRatio, assetsAllocated, assetsDeallocated);
-        */
     }
 
     /**
@@ -168,6 +168,6 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         emit InvestmentRatioUpdated(newRatio);
 
         // Automatically rebalance when ratio changes
-        // rebalance();
+        _rebalance();
     }
 }

@@ -62,6 +62,38 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
 
         // User1 withdraws assets from the vault
         vm.startPrank(user1);
+        vault.requestRedeem(1 ether, user1, user1);
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        vault.withdraw(1 ether, user1, user1);
+        vm.stopPrank();
+
+        assertEq(vault.totalAssets(), depositAmount - 1 ether, "Vault total assets should be depositAmount - 1 ether");
+        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault balance should be 2 ether");
+        assertEq(asset.balanceOf(address(lendingVault)), 7 ether, "Lending vault balance should be 7 ether");
+        assertEq(lendingVault.balanceOf(address(strategy)), 7 ether, "Strategy balance should be 7 ether");
+    }
+
+    function test_VaultStrategyWithdrawWithDeallocation() external {
+        uint256 depositAmount = 10 ether;
+
+        // User1 approves and deposits assets into the vault
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+
+        // Expect Deposit event to be emitted
+        vm.expectEmit(true, true, false, true);
+        emit IERC7575.Deposit(user1, user1, depositAmount, depositAmount);
+
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 2000000000000000000);
+        assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
+        assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
+        assertEq(vault.totalAssets(), depositAmount);
+
+        // User1 withdraws assets from the vault
+        vm.startPrank(user1);
         vault.requestRedeem(depositAmount, user1, user1);
         vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
         vault.withdraw(depositAmount, user1, user1);
@@ -70,5 +102,39 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         assertEq(asset.balanceOf(address(vault)), 0);
         assertEq(asset.balanceOf(address(lendingVault)), 0);
         assertEq(lendingVault.balanceOf(address(strategy)), 0);
+    }
+
+    function test_StrategyAllocationRatioChange() external {
+        uint256 depositAmount = 10 ether;
+
+        // Initial deposit with 80% ratio
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        // Change ratio to 60%
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(6000);
+
+        assertEq(
+            asset.balanceOf(address(vault)),
+            4 ether,
+            "After changing ratio to 60%, vault should hold 40% of initial deposit"
+        );
+        assertEq(
+            asset.balanceOf(address(lendingVault)),
+            6 ether,
+            "After changing ratio to 60%, lending vault should hold 60% of initial deposit"
+        );
+
+        // New deposit should follow new ratio
+        vm.startPrank(user2);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user2);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 8 ether, "Vault should hold 40% of new deposit");
+        assertEq(asset.balanceOf(address(lendingVault)), 12 ether, "Lending vault should hold 60% of new deposit");
     }
 }
