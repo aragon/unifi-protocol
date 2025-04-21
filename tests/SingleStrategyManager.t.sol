@@ -137,4 +137,108 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         assertEq(asset.balanceOf(address(vault)), 8 ether, "Vault should hold 40% of new deposit");
         assertEq(asset.balanceOf(address(lendingVault)), 12 ether, "Lending vault should hold 60% of new deposit");
     }
+
+    function test_StrategyWithdrawWithPartialDeallocation() external {
+        uint256 depositAmount = 10 ether;
+        uint256 withdrawAmount = 5 ether;
+
+        // Setup: deposit assets
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        // Request partial withdrawal
+        vault.requestRedeem(withdrawAmount, user1, user1);
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        vault.withdraw(withdrawAmount, user1, user1);
+        vm.stopPrank();
+
+        assertEq(vault.totalAssets(), depositAmount - withdrawAmount, "Total assets should be reduced");
+        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault balance should be reduced proportionally");
+        assertEq(asset.balanceOf(address(lendingVault)), 3 ether, "Strategy balance should be reduced proportionally");
+    }
+
+    function test_ZeroInvestmentRatio() external {
+        // Set investment ratio to 0
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(0);
+
+        uint256 depositAmount = 10 ether;
+
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), depositAmount, "All assets should remain in vault");
+        assertEq(asset.balanceOf(address(lendingVault)), 0, "No assets should be in strategy");
+    }
+
+    function test_MaxInvestmentRatio() external {
+        // Set investment ratio to 100%
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(10000);
+
+        uint256 depositAmount = 10 ether;
+
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 0, "No assets should remain in vault");
+        assertEq(asset.balanceOf(address(lendingVault)), depositAmount, "All assets should be in strategy");
+    }
+
+    function test_InvestmentRatioRevertOnExceed() external {
+        vm.startPrank(address(dao));
+        vm.expectRevert(abi.encodeWithSignature("RatioExceeds100Percent(uint256)", 10001));
+        vault.setInvestmentRatio(10001);
+        vm.stopPrank();
+    }
+
+    function test_OnlyDAOCanSetInvestmentRatio() external {
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSignature("OnlyDAOAllowed(address,address)", user1, address(dao)));
+        vault.setInvestmentRatio(5000);
+    }
+
+    function test_MultipleDepositsWithStrategy() external {
+        uint256 depositAmount = 5 ether;
+
+        // First deposit
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        // Second deposit
+        vm.startPrank(user2);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user2);
+        vm.stopPrank();
+
+        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault should hold 20% of total deposits");
+        assertEq(asset.balanceOf(address(lendingVault)), 8 ether, "Strategy should hold 80% of total deposits");
+        assertEq(vault.totalAssets(), depositAmount * 2, "Total assets should reflect both deposits");
+    }
+
+    function test_StrategyWithdrawWithFullDeallocation() external {
+        uint256 depositAmount = 10 ether;
+
+        // Setup: deposit assets
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        // Request full withdrawal
+        vault.requestRedeem(depositAmount, user1, user1);
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        vault.withdraw(depositAmount, user1, user1);
+        vm.stopPrank();
+
+        assertEq(vault.totalAssets(), 0, "Total assets should be zero");
+        assertEq(asset.balanceOf(address(vault)), 0, "Vault should have no assets");
+        assertEq(asset.balanceOf(address(lendingVault)), 0, "Strategy should have no assets");
+    }
 }
