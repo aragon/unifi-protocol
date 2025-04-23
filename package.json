@@ -1,0 +1,45 @@
+{
+  "name": "@aragon/unifi-protocol",
+  "description": "",
+  "version": "1.0.0",
+  "author": {
+    "name": "aragon",
+    "url": "https://github.com/aragon"
+  },
+  "dependencies": {
+    "@aragon/osx": "aragon/osx",
+    "@aragon/osx-commons-repo": "github:aragon/osx-commons",
+    "@openzeppelin/community-contracts": "OpenZeppelin/openzeppelin-community-contracts",
+    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-upgradeable": "4.9.6",
+    "@openzeppelin/foundry-upgrades": "^0.4.0",
+    "openzeppelin-solidity": "OpenZeppelin/openzeppelin-contracts-upgradeable",
+    "solmate": "^6.8.0"
+  },
+  "devDependencies": {
+    "forge-std": "github:foundry-rs/forge-std#v1.8.1",
+    "prettier": "^3.0.0",
+    "solhint": "^3.6.2"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "forge",
+    "foundry",
+    "smart-contracts",
+    "solidity",
+    "template"
+  ],
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf cache out",
+    "build": "forge build",
+    "lint": "bun run lint:sol && bun run prettier:check",
+    "lint:sol": "forge fmt --check && bun solhint \"{script,src,tests}/**/*.sol\"",
+    "prettier:check": "prettier --check \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
+    "prettier:write": "prettier --write \"**/*.{json,md,yml}\" --ignore-path \".prettierignore\"",
+    "test": "forge test",
+    "test:coverage": "forge coverage",
+    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage"
+  }
+}
