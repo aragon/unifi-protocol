@@ -1,3 +1,5 @@
+pragma solidity ^0.8.29;
+
 import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 

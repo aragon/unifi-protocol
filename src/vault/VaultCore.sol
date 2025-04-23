@@ -21,8 +21,14 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
 
     ERC7575Share internal immutable _share;
     IERC20 internal immutable _asset;
+    uint256 public minVaultShareBps; // 10000 -> 100%
 
     uint256 internal internalShares = 0;
+
+    /**
+     * @dev Emitted when the minimum vault share basis points are updated.
+     */
+    event MinVaultShareBpsUpdated(uint256 minVaultShareBps);
 
     /**
      * @dev Attempted to deposit more assets than the max amount for `receiver`.
@@ -54,9 +60,10 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
      */
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
 
-    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao) SingleStrategyManager(_dao) {
+    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao, uint256 _minVaultShareBps) SingleStrategyManager(_dao) {
         _asset = asset_;
         _share = share_;
+        minVaultShareBps = _minVaultShareBps;
     }
 
     // @inheritdoc IERC7575
@@ -67,6 +74,20 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
     // @inheritdoc IERC7575
     function share() external view override returns (address shareTokenAddress) {
         return address(_share);
+    }
+
+    function setMinVaultShareBps(uint256 _minVaultShareBps) external {
+        if (msg.sender != address(dao())) revert OnlyDAOAllowed(msg.sender, address(dao()));
+
+        minVaultShareBps = _minVaultShareBps;
+
+        emit MinVaultShareBpsUpdated(_minVaultShareBps);
+    }
+
+    function getCurrentVaultShareBps() external view returns (uint256) {
+        uint256 total = _share.totalSupply();
+        if (internalShares == 0) return 0; // avoid division by zero
+        return (total * 10_000) / internalShares;
     }
 
     // @inheritdoc IERC7575

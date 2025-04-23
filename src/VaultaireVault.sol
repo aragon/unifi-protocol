@@ -29,8 +29,9 @@ contract VaultaireVault is VaultAuth, VaultRedeem {
         IERC20 asset_,
         ERC7575Share share_,
         IDAO _dao,
-        uint32 _timelock
-    ) VaultCore(asset_, share_, _dao) VaultAuth("VaultaireVault", "1") VaultRedeem(_timelock) {
+        uint32 _timelock,
+        uint256 _minVaultShareBps
+    ) VaultCore(asset_, share_, _dao, _minVaultShareBps) VaultAuth("VaultaireVault", "1") VaultRedeem(_timelock) {
         // Constructor logic is handled by parent contracts
     }
 

@@ -19,6 +19,7 @@ import {IVaultAllocationStrategy} from "../src/interfaces/IVaultAllocationStrate
 contract BaseVaultaireTest is Test {
     // Constants
     uint256 constant INITIAL_ASSETS = 10000 ether;
+    uint256 constant INITIAL_MIN_VAULT_SHARE_BPS = 1_000;
     uint32 constant REDEMPTION_TIMELOCK = 1 days;
 
     // Test accounts
@@ -54,7 +55,13 @@ contract BaseVaultaireTest is Test {
 
         // Deploy vault
         vm.startPrank(deployer);
-        vault = new VaultaireVault(IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK);
+        vault = new VaultaireVault(
+            IERC20(address(asset)),
+            share,
+            dao,
+            REDEMPTION_TIMELOCK,
+            INITIAL_MIN_VAULT_SHARE_BPS
+        );
         vm.stopPrank();
 
         // Set up relationships

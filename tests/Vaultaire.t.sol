@@ -246,4 +246,36 @@ contract VaultaireVaultTest is BaseVaultaireTest {
         vault.setOperator(user1, true);
         vm.stopPrank();
     }
+
+    function test_MinVaultShareBps() external {
+        // Initial value should match what was set in constructor
+        assertEq(vault.minVaultShareBps(), INITIAL_MIN_VAULT_SHARE_BPS, "Initial minVaultShareBps incorrect");
+
+        // Non-DAO address should not be able to set minVaultShareBps
+        vm.startPrank(user1);
+        vm.expectRevert();
+        vault.setMinVaultShareBps(5000);
+        vm.stopPrank();
+
+        // DAO should be able to set minVaultShareBps
+        vm.startPrank(address(dao));
+        vault.setMinVaultShareBps(5000);
+        vm.stopPrank();
+
+        // Verify the new value
+        assertEq(vault.minVaultShareBps(), 5000, "minVaultShareBps not updated correctly");
+
+        // Test getCurrentVaultShareBps with no shares
+        assertEq(vault.getCurrentVaultShareBps(), 0, "Should be 0 when no shares exist");
+
+        // Deposit some assets to test getCurrentVaultShareBps
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        // Since we're using 1:1 ratio initially, the share BPS should be 10000 (100%)
+        assertEq(vault.getCurrentVaultShareBps(), 10000, "Current vault share BPS should be 100%");
+    }
 }
