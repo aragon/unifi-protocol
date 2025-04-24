@@ -19,8 +19,8 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
     /// @dev Constant request ID used for all redemption requests
     uint256 internal constant REQUEST_ID = 0;
 
-    /// @dev Timelock duration in seconds for redemption requests
-    uint32 public timelock;
+    /// @dev Minimum timelock duration in seconds for redemption requests
+    uint32 public minTimelock;
 
     /// @dev Total assets currently pending redemption
     uint256 internal _totalPendingRedeemAssets;
@@ -49,8 +49,8 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
      */
     error InsufficientRedeemableBalance(address owner, uint256 requested, uint256 available);
 
-    constructor(uint32 _timelock) {
-        timelock = _timelock;
+    constructor(uint32 _minTimelock) {
+        minTimelock = _minTimelock;
     }
 
     // @inheritdoc VaultaireCore
@@ -145,6 +145,34 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         return assets;
     }
 
+    /// @notice Preview the timelock duration for a redemption request.
+    function previewRedeemTimelock() public view returns (uint32) {
+        return minTimelock + _calculateAdditionalTimelock();
+    }
+
+    /**
+     * @dev Calculates additional timelock duration based on current vault share percentage
+     * @return Additional seconds to add to the minimum timelock
+     */
+    function _calculateAdditionalTimelock() internal view returns (uint32) {
+        uint256 currentShareBps = getCurrentVaultShareBps();
+
+        if (currentShareBps >= minVaultShareBps) {
+            return 0;
+        }
+
+        // Calculate percentage below minimum (in basis points)
+        uint256 bpsDifference = minVaultShareBps - currentShareBps;
+        uint256 percentageBelow = (bpsDifference * 100) / minVaultShareBps;
+
+        // Square the percentage for exponential effect
+        // percentageBelow is 0-100, so square won't overflow
+        uint256 exponentialFactor = (percentageBelow * percentageBelow);
+
+        // Scale the timelock: base * (percentageBelow^2 / 100)
+        return uint32((minTimelock * exponentialFactor) / 100);
+    }
+
     /**
      * @dev Withdrawal implementation used by both withdraw and redeem
      */
@@ -180,17 +208,20 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
+        // Calculate total timelock including additional time based on vault state
+        uint32 totalTimelock = minTimelock + _calculateAdditionalTimelock();
+
         // If there's an existing request, we update it and reset timelock
         if (request.shares > 0) {
             request.assets += assets;
             request.shares += shares;
-            // Reset timelock to ensure enough time for the new request
-            request.claimableTimestamp = uint32(block.timestamp) + timelock;
+            // Reset timelock with new calculated total
+            request.claimableTimestamp = uint32(block.timestamp) + totalTimelock;
         } else {
             _pendingRedemption[controller] = RedemptionRequest({
                 assets: assets,
                 shares: shares,
-                claimableTimestamp: uint32(block.timestamp) + timelock
+                claimableTimestamp: uint32(block.timestamp) + totalTimelock
             });
         }
 
@@ -246,9 +277,9 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
     /**
      * @dev Sets the timelock duration for redemption requests
      */
-    function setTimelock(uint32 timelock_) public virtual {
+    function setMinTimelock(uint32 minTimelock_) public virtual {
         if (msg.sender == address(dao())) {
-            timelock = timelock_;
+            minTimelock = minTimelock_;
         }
     }
 

@@ -5,6 +5,7 @@ import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
 import {console2} from "forge-std/src/console2.sol";
 
 import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
 import {ERC7575Share} from "../src/ERC7575Share.sol";
 import {IERC7575} from "../src/interfaces/IERC7575.sol";
 import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
@@ -95,7 +96,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         // User1 withdraws assets from the vault
         vm.startPrank(user1);
         vault.requestRedeem(depositAmount, user1, user1);
-        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        VaultRedeem.RedemptionRequest memory request = vault.pendingRedeemRequestData(user1);
+        vm.warp(request.claimableTimestamp + 1);
         vault.withdraw(depositAmount, user1, user1);
         vm.stopPrank();
 
@@ -233,7 +235,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
 
         // Request full withdrawal
         vault.requestRedeem(depositAmount, user1, user1);
-        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+        VaultRedeem.RedemptionRequest memory request = vault.pendingRedeemRequestData(user1);
+        vm.warp(request.claimableTimestamp + 1);
         vault.withdraw(depositAmount, user1, user1);
         vm.stopPrank();
 

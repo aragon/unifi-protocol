@@ -84,7 +84,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
         emit MinVaultShareBpsUpdated(_minVaultShareBps);
     }
 
-    function getCurrentVaultShareBps() external view returns (uint256) {
+    function getCurrentVaultShareBps() public view returns (uint256) {
         uint256 total = _share.totalSupply();
         if (internalShares == 0) return 0; // avoid division by zero
         return (total * 10_000) / internalShares;

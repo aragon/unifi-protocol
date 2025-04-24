@@ -22,7 +22,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
     function test_VaultInitialization() external view {
         assertEq(address(vault.asset()), address(asset), "Incorrect asset address");
         assertEq(address(vault.share()), address(share), "Incorrect share address");
-        assertEq(vault.timelock(), REDEMPTION_TIMELOCK, "Incorrect timelock period");
+        assertEq(vault.minTimelock(), REDEMPTION_TIMELOCK, "Incorrect timelock period");
     }
 
     /// @dev Test share token initialization and vault relationship
