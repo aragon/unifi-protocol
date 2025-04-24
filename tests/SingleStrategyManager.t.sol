@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
-import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import { IERC7540Operator } from "../src/interfaces/IERC7540.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {createTestDAO} from "./mocks/MockDAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
 
 contract SingleStrategyManagerTest is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.
@@ -37,9 +37,9 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
-        assertEq(asset.balanceOf(address(vault)), 2000000000000000000);
-        assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
-        assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
+        assertEq(asset.balanceOf(address(vault)), 2_000_000_000_000_000_000);
+        assertEq(asset.balanceOf(address(lendingVault)), 8_000_000_000_000_000_000);
+        assertEq(lendingVault.balanceOf(address(strategy)), 8_000_000_000_000_000_000);
     }
 
     function test_VaultStrategyWithdraw() external {
@@ -56,9 +56,9 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
-        assertEq(asset.balanceOf(address(vault)), 2000000000000000000);
-        assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
-        assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
+        assertEq(asset.balanceOf(address(vault)), 2_000_000_000_000_000_000);
+        assertEq(asset.balanceOf(address(lendingVault)), 8_000_000_000_000_000_000);
+        assertEq(lendingVault.balanceOf(address(strategy)), 8_000_000_000_000_000_000);
         assertEq(vault.totalAssets(), depositAmount);
 
         // User1 withdraws assets from the vault
@@ -88,9 +88,9 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
-        assertEq(asset.balanceOf(address(vault)), 2000000000000000000);
-        assertEq(asset.balanceOf(address(lendingVault)), 8000000000000000000);
-        assertEq(lendingVault.balanceOf(address(strategy)), 8000000000000000000);
+        assertEq(asset.balanceOf(address(vault)), 2_000_000_000_000_000_000);
+        assertEq(asset.balanceOf(address(lendingVault)), 8_000_000_000_000_000_000);
+        assertEq(lendingVault.balanceOf(address(strategy)), 8_000_000_000_000_000_000);
         assertEq(vault.totalAssets(), depositAmount);
 
         // User1 withdraws assets from the vault
@@ -179,7 +179,7 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     function test_MaxInvestmentRatio() external {
         // Set investment ratio to 100%
         vm.prank(address(dao));
-        vault.setInvestmentRatio(10000);
+        vault.setInvestmentRatio(10_000);
 
         uint256 depositAmount = 10 ether;
 
@@ -194,8 +194,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
 
     function test_InvestmentRatioRevertOnExceed() external {
         vm.startPrank(address(dao));
-        vm.expectRevert(abi.encodeWithSignature("RatioExceeds100Percent(uint256)", 10001));
-        vault.setInvestmentRatio(10001);
+        vm.expectRevert(abi.encodeWithSignature("RatioExceeds100Percent(uint256)", 10_001));
+        vault.setInvestmentRatio(10_001);
         vm.stopPrank();
     }
 

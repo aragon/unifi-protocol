@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {IERC7540Operator} from "../interfaces/IERC7540.sol";
+import { IERC7540Operator } from "../interfaces/IERC7540.sol";
 
 /**
  * @title VaultaireOperator

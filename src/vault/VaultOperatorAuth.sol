@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {VaultOperator} from "./VaultOperator.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { VaultOperator } from "./VaultOperator.sol";
 
 /**
  * @title VaultaireAuth
@@ -27,7 +27,7 @@ abstract contract VaultAuth is VaultOperator, EIP712 {
      */
     error InvalidSignature(address expectedSigner, address recoveredSigner);
 
-    constructor(string memory name, string memory version) EIP712(name, version) {}
+    constructor(string memory name, string memory version) EIP712(name, version) { }
 
     // solhint-disable-next-line func-name-mixedcase
     function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
@@ -44,7 +44,11 @@ abstract contract VaultAuth is VaultOperator, EIP712 {
         bytes32 nonce,
         uint256 deadline,
         bytes memory signature
-    ) public virtual returns (bool success) {
+    )
+        public
+        virtual
+        returns (bool success)
+    {
         if (msg.sender == operator) revert CannotSetSelfAsOperator(msg.sender);
 
         if (block.timestamp > deadline) revert AuthorizationExpired(block.timestamp, deadline);
@@ -85,8 +89,9 @@ abstract contract VaultAuth is VaultOperator, EIP712 {
             s
         );
 
-        if (recoveredAddress == address(0) || recoveredAddress != controller)
+        if (recoveredAddress == address(0) || recoveredAddress != controller) {
             revert InvalidSignature(controller, recoveredAddress);
+        }
 
         isOperator[controller][operator] = approved;
 

@@ -32,11 +32,7 @@ interface IERC7540Operator {
 
 interface IERC7540Deposit {
     event DepositRequest(
-        address indexed controller,
-        address indexed owner,
-        uint256 indexed requestId,
-        address sender,
-        uint256 assets
+        address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 assets
     );
 
     /**
@@ -53,7 +49,6 @@ interface IERC7540Deposit {
      *
      * NOTE: most implementations will require pre-approval of the Vault with the Vault's underlying asset token.
      */
-
     function requestDeposit(uint256 assets, address controller, address owner) external returns (uint256 requestId);
 
     /**
@@ -63,7 +58,13 @@ interface IERC7540Deposit {
      * - MUST NOT show any variations depending on the caller.
      * - MUST NOT revert unless due to integer overflow caused by an unreasonably large input.
      */
-    function pendingDepositRequest(uint256 requestId, address controller) external view returns (uint256 pendingAssets);
+    function pendingDepositRequest(
+        uint256 requestId,
+        address controller
+    )
+        external
+        view
+        returns (uint256 pendingAssets);
 
     /**
      * @dev Returns the amount of requested assets in Claimable state for the controller to deposit or mint.
@@ -75,7 +76,10 @@ interface IERC7540Deposit {
     function claimableDepositRequest(
         uint256 requestId,
         address controller
-    ) external view returns (uint256 claimableAssets);
+    )
+        external
+        view
+        returns (uint256 claimableAssets);
 
     /**
      * @dev Mints shares Vault shares to receiver by claiming the Request of the controller.
@@ -96,11 +100,7 @@ interface IERC7540Deposit {
 
 interface IERC7540Redeem {
     event RedeemRequest(
-        address indexed controller,
-        address indexed owner,
-        uint256 indexed requestId,
-        address sender,
-        uint256 assets
+        address indexed controller, address indexed owner, uint256 indexed requestId, address sender, uint256 assets
     );
 
     /**
@@ -125,7 +125,13 @@ interface IERC7540Redeem {
      * - MUST NOT show any variations depending on the caller.
      * - MUST NOT revert unless due to integer overflow caused by an unreasonably large input.
      */
-    function pendingRedeemRequest(uint256 requestId, address controller) external view returns (uint256 pendingShares);
+    function pendingRedeemRequest(
+        uint256 requestId,
+        address controller
+    )
+        external
+        view
+        returns (uint256 pendingShares);
 
     /**
      * @dev Returns the amount of requested shares in Claimable state for the controller to redeem or withdraw.
@@ -137,5 +143,8 @@ interface IERC7540Redeem {
     function claimableRedeemRequest(
         uint256 requestId,
         address controller
-    ) external view returns (uint256 claimableShares);
+    )
+        external
+        view
+        returns (uint256 claimableShares);
 }

@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
-import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
-import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import { IERC7540Operator } from "../src/interfaces/IERC7540.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {createTestDAO} from "./mocks/MockDAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
 
 contract VaultaireVaultTest is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.
-    function setUp() public virtual {}
+    function setUp() public virtual { }
 
     /// @dev Test if the vault is correctly configured after deployment
     function test_VaultInitialization() external view {
@@ -30,8 +30,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
     function test_ShareTokenInitialization() external view {
         assertEq(share.vault(address(asset)), address(vault), "Incorrect vault mapping in share token");
         assertTrue(
-            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""),
-            "Vault doesn't have VAULT_ROLE"
+            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""), "Vault doesn't have VAULT_ROLE"
         );
         assertEq(share.name(), "uUSD", "Incorrect share token name");
         assertEq(share.symbol(), "uUSD", "Incorrect share token symbol");
@@ -277,7 +276,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
         vm.stopPrank();
 
         // Since we're using 1:1 ratio initially, the share BPS should be 10000 (100%)
-        assertEq(vault.getCurrentVaultShareBps(), 10000, "Current vault share BPS should be 100%");
+        assertEq(vault.getCurrentVaultShareBps(), 10_000, "Current vault share BPS should be 100%");
     }
 
     /// @dev Test the exponential timelock calculation with different redemption amounts
@@ -341,8 +340,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
 
             if (i > 0) {
                 assertTrue(
-                    currentTimelock > previousTimelock,
-                    "Timelock should increase with larger redemption amounts"
+                    currentTimelock > previousTimelock, "Timelock should increase with larger redemption amounts"
                 );
             }
 

@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {Test} from "forge-std/src/Test.sol";
+import { Test } from "forge-std/src/Test.sol";
 
 import "../src/VaultaireVault.sol";
 import "../src/ERC7575Share.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@aragon/commons/dao/IDAO.sol";
-import {MockERC4626} from "./mocks/MockERC4626.sol";
+import { MockERC4626 } from "./mocks/MockERC4626.sol";
 
-import {MintableERC20} from "./mocks/MintableERC20.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
 // import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
-import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {createTestDAO} from "./mocks/MockDAO.sol";
-import {IVaultAllocationStrategy} from "../src/interfaces/IVaultAllocationStrategy.sol";
+import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
+import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStrategy.sol";
 
 contract BaseVaultaireTest is Test {
     // Constants
-    uint256 constant INITIAL_ASSETS = 10000 ether;
-    uint256 constant INITIAL_MIN_VAULT_SHARE_BPS = 1_000;
+    uint256 constant INITIAL_ASSETS = 10_000 ether;
+    uint256 constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
     uint32 constant REDEMPTION_TIMELOCK = 1 days;
 
     // Test accounts
@@ -60,13 +60,7 @@ contract BaseVaultaireTest is Test {
 
         // Deploy vault
         vm.startPrank(deployer);
-        vault = new VaultaireVault(
-            IERC20(address(asset)),
-            share,
-            dao,
-            REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
-        );
+        vault = new VaultaireVault(IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS);
         vm.stopPrank();
 
         // Set up relationships
@@ -94,13 +88,8 @@ contract BaseVaultaireTest is Test {
 
         // Deploy vault 2
         vm.startPrank(deployer);
-        vault2 = new VaultaireVault(
-            IERC20(address(asset2)),
-            share,
-            dao,
-            REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
-        );
+        vault2 =
+            new VaultaireVault(IERC20(address(asset2)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS);
         vm.stopPrank();
 
         // Set up relationships

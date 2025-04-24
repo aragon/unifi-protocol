@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
-import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
-import {IVaultAllocationStrategy} from "../interfaces/IVaultAllocationStrategy.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import { DaoAuthorizable } from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import { IVaultAllocationStrategy } from "../interfaces/IVaultAllocationStrategy.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title SingleStrategyManager
@@ -27,6 +27,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
     /**
      * @dev Error thrown when a non-DAO address attempts to call a DAO-only function.
      */
+
     error OnlyDAOAllowed(address caller, address dao);
 
     /**
@@ -34,7 +35,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      */
     error RatioExceeds100Percent(uint256 ratio);
 
-    constructor(IDAO dao_) DaoAuthorizable(dao_) {}
+    constructor(IDAO dao_) DaoAuthorizable(dao_) { }
 
     /**
      * @notice Assigns a new strategy address (or updates the existing one).
@@ -75,7 +76,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         if (address(_strategy) == address(0)) return 0;
 
         // Calculate how much to actually invest based on the ratio
-        uint256 amountToInvest = (assets * investmentRatio) / 10000;
+        uint256 amountToInvest = (assets * investmentRatio) / 10_000;
         if (amountToInvest == 0) return 0;
 
         IERC20(asset()).approve(address(_strategy), amountToInvest);
@@ -123,7 +124,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
         uint256 totalAssets = vaultBalance + strategyBalance;
 
         // Calculate target amounts based on investment ratio
-        uint256 targetStrategyAmount = (totalAssets * investmentRatio) / 10000;
+        uint256 targetStrategyAmount = (totalAssets * investmentRatio) / 10_000;
 
         // Determine if we need to allocate more to strategy or deallocate
         if (strategyBalance < targetStrategyAmount) {
@@ -131,7 +132,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
             uint256 amountToInvest = targetStrategyAmount - strategyBalance;
 
             // Ensure the vault has enough to invest while respecting reserved ratio
-            uint256 minReserve = (totalAssets * (10000 - investmentRatio)) / 10000;
+            uint256 minReserve = (totalAssets * (10_000 - investmentRatio)) / 10_000;
             if (vaultBalance - amountToInvest < minReserve) {
                 amountToInvest = vaultBalance > minReserve ? vaultBalance - minReserve : 0;
             }
@@ -160,7 +161,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
             revert OnlyDAOAllowed(msg.sender, address(dao()));
         }
 
-        if (newRatio > 10000) {
+        if (newRatio > 10_000) {
             revert RatioExceeds100Percent(newRatio);
         }
 

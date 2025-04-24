@@ -30,7 +30,8 @@ interface IVaultAllocationStrategy {
     /**
      * @notice Pulls `assets` from the strategy back to the vault, liquidating external positions as needed.
      * @param assets Amount of underlying assets to deallocate.
-     * @return actualDivested The actual amount of underlying assets divested (some strategies may be partially illiquid).
+     * @return actualDivested The actual amount of underlying assets divested (some strategies may be partially
+     * illiquid).
      */
     function divest(uint256 assets) external returns (uint256 actualDivested);
 

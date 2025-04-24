@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
-import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {PausableShare} from "../src/share/PausableShare.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import { IERC7540Operator } from "../src/interfaces/IERC7540.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { PausableShare } from "../src/share/PausableShare.sol";
 
-import {createTestDAO} from "./mocks/MockDAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
 
 contract VaultairePausePermissions is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.
-    function setUp() public virtual {}
+    function setUp() public virtual { }
 
     /// @dev Test basic deposit functionality
     function test_Deposit() external {

@@ -1,7 +1,7 @@
 pragma solidity ^0.8.29;
 
-import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import { DaoAuthorizable } from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
 
 contract PausableShare is DaoAuthorizable {
     bool public mintsPaused;
@@ -10,7 +10,7 @@ contract PausableShare is DaoAuthorizable {
     error NotAuthorized();
     error SharesPaused();
 
-    constructor(IDAO _dao) DaoAuthorizable(_dao) {}
+    constructor(IDAO _dao) DaoAuthorizable(_dao) { }
 
     function pauseMints() public {
         if (msg.sender != address(dao())) revert NotAuthorized();

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
 
-import {MintableERC20} from "../tests/mocks/MintableERC20.sol";
+import { MintableERC20 } from "../tests/mocks/MintableERC20.sol";
 
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
 
-import {BaseScript} from "./Base.s.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseScript } from "./Base.s.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
