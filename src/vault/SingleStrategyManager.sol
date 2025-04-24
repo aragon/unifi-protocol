@@ -100,7 +100,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
     /**
      * @notice Harvests yield on the active strategy.
      */
-    function _harvest() internal {
+    function harvest() external virtual {
         if (address(_strategy) == address(0)) return;
         _strategy.harvest();
     }

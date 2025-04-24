@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
+import {console2} from "forge-std/src/console2.sol";
+
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {ERC7575Share} from "./ERC7575Share.sol";
 import {IERC7575} from "./interfaces/IERC7575.sol";
 import {IERC7540Operator, IERC7540Redeem} from "./interfaces/IERC7540.sol";
@@ -19,8 +23,14 @@ import {VaultRedeem} from "./vault/VaultRedeem.sol";
  * @title VaultaireVault
  * @dev Main vault contract that combines all components
  */
-contract VaultaireVault is VaultAuth, VaultRedeem {
+contract Vaultaire4626TokenVault is VaultAuth, VaultRedeem {
+    using SafeERC20 for IERC20;
     using Math for uint256;
+
+    /**
+     * @dev Event emitted when the strategy harvests yield.
+     */
+    event StrategyHarvest(uint256 yield);
 
     /**
      * @dev Constructor for VaultaireVault
@@ -56,24 +66,31 @@ contract VaultaireVault is VaultAuth, VaultRedeem {
     /**
      * @dev Override _convertToShares to account for pending redemptions
      */
-    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
-        return
-            assets.mulDiv(
-                totalInternalShares() + 10 ** _decimalsOffset(),
-                totalAssets() - _totalPendingRedeemAssets + 1,
-                rounding
-            );
+    function _convertToShares(uint256 assets, Math.Rounding) internal view override returns (uint256) {
+        return ERC4626(address(_asset)).convertToShares(assets);
     }
 
     /**
      * @dev Override _convertToShares to account for pending redemptions
      */
-    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view override returns (uint256) {
-        return
-            shares.mulDiv(
-                totalAssets() - _totalPendingRedeemAssets + 1,
-                totalInternalShares() + 10 ** _decimalsOffset(),
-                rounding
-            );
+    function _convertToAssets(uint256 shares, Math.Rounding) internal view override returns (uint256) {
+        return ERC4626(address(_asset)).convertToAssets(shares);
+    }
+
+    function calculateYield() public view returns (uint256 yield) {
+        uint256 totalAssetsNow = ERC4626(address(_asset)).maxWithdraw(address(this));
+        return totalAssetsNow > internalAssets ? totalAssetsNow - internalAssets : 0;
+    }
+
+    /**
+     * @notice Harvests yield on the active strategy.
+     */
+    function harvest() external override {
+        uint256 yield = calculateYield();
+        if (yield == 0) return;
+
+        _asset.safeTransfer(address(dao()), yield);
+
+        emit StrategyHarvest(yield);
     }
 }

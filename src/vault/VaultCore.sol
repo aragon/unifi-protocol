@@ -24,6 +24,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
     uint256 public minVaultShareBps; // 10_000 -> 100%
 
     uint256 internal internalShares = 0;
+    uint256 internal internalAssets = 0;
 
     /**
      * @dev Emitted when the minimum vault share basis points are updated.
@@ -189,6 +190,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transferred and before the shares are minted, which is a valid state.
         internalShares += shares;
+        internalAssets += assets;
         SafeERC20.safeTransferFrom(_asset, caller, address(this), assets);
         _share.mint(receiver, shares);
 

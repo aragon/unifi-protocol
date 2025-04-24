@@ -58,30 +58,6 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         return _asset.balanceOf(address(this));
     }
 
-    /**
-     * @dev Override _convertToShares to account for pending redemptions
-     */
-    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
-        return
-            assets.mulDiv(
-                totalInternalShares() + 10 ** _decimalsOffset(),
-                totalAssets() - _totalPendingRedeemAssets + 1,
-                rounding
-            );
-    }
-
-    /**
-     * @dev Override _convertToShares to account for pending redemptions
-     */
-    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view override returns (uint256) {
-        return
-            shares.mulDiv(
-                totalAssets() - _totalPendingRedeemAssets + 1,
-                totalInternalShares() + 10 ** _decimalsOffset(),
-                rounding
-            );
-    }
-
     // @inheritdoc IERC7575
     function maxRedeem(address controller) public view override returns (uint256) {
         RedemptionRequest memory request = _pendingRedemption[controller];
@@ -213,6 +189,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
         _share.burn(owner, shares);
         internalShares -= shares;
+        internalAssets -= assets;
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
