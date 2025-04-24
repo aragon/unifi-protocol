@@ -160,6 +160,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
         uint256 assets = previewMint(shares);
         _deposit(_msgSender(), receiver, assets, shares);
 
+        _afterDeposit(previewMint(shares));
         return assets;
     }
 
