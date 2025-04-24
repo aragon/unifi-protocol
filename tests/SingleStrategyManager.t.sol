@@ -244,4 +244,24 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         assertEq(asset.balanceOf(address(vault)), 0, "Vault should have no assets");
         assertEq(asset.balanceOf(address(lendingVault)), 0, "Strategy should have no assets");
     }
+
+    function test_StrategyCalculatesTheYield() external {
+        uint256 depositAmount = 10 ether;
+
+        // Setup: deposit assets
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        assertEq(strategy.calculateYield(), 0, "Yield should be zero initially");
+
+        // Let's get some strategyVault shares
+
+        uint256 givenYield = 1 ether;
+        asset.approve(address(strategy.targetVault()), givenYield);
+        strategy.targetVault().deposit(givenYield, user1);
+        strategy.targetVault().transfer(address(strategy), givenYield);
+
+        assertEq(strategy.calculateYield(), 1 ether, "Yield should what was given to the strategy");
+    }
 }
