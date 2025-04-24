@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.29;
 
 /**
  * @dev Interface of the ERC165 standard, as defined in the
@@ -23,7 +23,11 @@ interface IERC165 {
 interface IERC7575 is IERC165 {
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
     event Withdraw(
-        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
+        address indexed sender,
+        address indexed receiver,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
     );
 
     /**

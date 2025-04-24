@@ -1,4 +1,4 @@
-# Unifi Protocol   [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# Unifi Protocol [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
 [foundry]: https://getfoundry.sh/
 [foundry-badge]: https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg
@@ -6,7 +6,6 @@
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 Unifi is a modular and extensible vault system designed for decentralized finance (DeFi) applications.
-
 
 ## What's Inside
 

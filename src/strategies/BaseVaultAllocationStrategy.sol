@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IVaultAllocationStrategy } from "../interfaces/IVaultAllocationStrategy.sol";
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
-import { DaoAuthorizable } from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
-import { VaultaireVault } from "../VaultaireVault.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IVaultAllocationStrategy} from "../interfaces/IVaultAllocationStrategy.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import {VaultaireVault} from "../VaultaireVault.sol";
 
 /**
  * @title BaseVaultAllocationStrategy
@@ -17,10 +17,10 @@ abstract contract BaseVaultAllocationStrategy is IVaultAllocationStrategy, DaoAu
     using SafeERC20 for IERC20;
 
     // The underlying asset this strategy manages
-    IERC20 public immutable underlyingAsset;
+    IERC20 public underlyingAsset;
 
     // The Vaultaire vault that owns this strategy
-    VaultaireVault public immutable vaultaireVault;
+    VaultaireVault public vaultaireVault;
 
     // Total principal (excluding yield)
     uint256 public totalPrincipal;
@@ -75,25 +75,25 @@ abstract contract BaseVaultAllocationStrategy is IVaultAllocationStrategy, DaoAu
      * @notice Hook called before investing assets. May be used for pre-investment operations.
      * @param amount Amount of assets being invested
      */
-    function _beforeInvest(uint256 amount) internal virtual { }
+    function _beforeInvest(uint256 amount) internal virtual {}
 
     /**
      * @notice Hook called after investing assets. May be used for post-investment operations.
      * @param amount Amount of assets invested
      * @param shares Amount of shares received
      */
-    function _afterInvest(uint256 amount, uint256 shares) internal virtual { }
+    function _afterInvest(uint256 amount, uint256 shares) internal virtual {}
 
     /**
      * @notice Hook called before divesting assets. May be used for pre-divestment operations.
      * @param amount Amount of assets being divested
      */
-    function _beforeDivest(uint256 amount) internal virtual { }
+    function _beforeDivest(uint256 amount) internal virtual {}
 
     /**
      * @notice Hook called after divesting assets. May be used for post-divestment operations.
      * @param amount Amount of assets requested to divest
      * @param actualDivested Actual amount divested
      */
-    function _afterDivest(uint256 amount, uint256 actualDivested) internal virtual { }
+    function _afterDivest(uint256 amount, uint256 actualDivested) internal virtual {}
 }
