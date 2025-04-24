@@ -31,10 +31,14 @@ contract BaseVaultaireTest is Test {
     // Contracts
     DAO dao;
     MintableERC20 asset;
+    MintableERC20 asset2;
     ERC7575Share share;
     VaultaireVault vault;
+    VaultaireVault vault2;
     ERC4626Strategy strategy;
+    ERC4626Strategy strategy2;
     MockERC4626 lendingVault;
+    MockERC4626 lendingVault2;
 
     constructor() {
         // Create test accounts
@@ -46,6 +50,7 @@ contract BaseVaultaireTest is Test {
         // Deploy mock DAO
         dao = createTestDAO(deployer);
         asset = new MintableERC20(deployer, "Test USD", "USDT");
+        asset2 = new MintableERC20(deployer, "Test USD", "USDC");
         vm.stopPrank();
 
         // Deploy share token
@@ -85,6 +90,40 @@ contract BaseVaultaireTest is Test {
         vm.startPrank(deployer);
         asset.mint(user1, INITIAL_ASSETS);
         asset.mint(user2, INITIAL_ASSETS);
+        vm.stopPrank();
+
+        // Deploy vault 2
+        vm.startPrank(deployer);
+        vault2 = new VaultaireVault(
+            IERC20(address(asset2)),
+            share,
+            dao,
+            REDEMPTION_TIMELOCK,
+            INITIAL_MIN_VAULT_SHARE_BPS
+        );
+        vm.stopPrank();
+
+        // Set up relationships
+        vm.startPrank(address(dao));
+        share.addVault(address(asset2), vault2);
+        vm.stopPrank();
+        vm.startPrank(deployer);
+        dao.grant(address(share), address(vault2), share.VAULT_ROLE());
+        vm.stopPrank();
+
+        // Deploy strategy
+        vm.startPrank(deployer);
+        lendingVault2 = new MockERC4626(address(asset2));
+        strategy2 = new ERC4626Strategy(asset2, vault2, lendingVault2, dao);
+        vm.stopPrank();
+        vm.startPrank(address(dao));
+        vault2.setStrategy(IVaultAllocationStrategy(strategy2));
+        vm.stopPrank();
+
+        // Mint initial assets to test users
+        vm.startPrank(deployer);
+        asset2.mint(user1, INITIAL_ASSETS);
+        asset2.mint(user2, INITIAL_ASSETS);
         vm.stopPrank();
     }
 }

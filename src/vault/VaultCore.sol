@@ -21,7 +21,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
 
     ERC7575Share internal immutable _share;
     IERC20 internal immutable _asset;
-    uint256 public minVaultShareBps; // 10000 -> 100%
+    uint256 public minVaultShareBps; // 10_000 -> 100%
 
     uint256 internal internalShares = 0;
 

@@ -145,32 +145,38 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         return assets;
     }
 
-    /// @notice Preview the timelock duration for a redemption request.
-    function previewRedeemTimelock() public view returns (uint32) {
-        return minTimelock + _calculateAdditionalTimelock();
-    }
+    /// @notice Preview the timelock duration for a redemption request
+    /// @param shares Amount of shares to be redeemed
+    /// @return Total timelock duration in seconds (base + additional)
+    function previewRedeemTimelock(uint256 shares) public view returns (uint32) {
+        uint256 globalTotalShares = _share.totalSupply(); // Total across all vaults
+        uint256 vaultInternalShares = internalShares; // Internal share count for this vault
 
-    /**
-     * @dev Calculates additional timelock duration based on current vault share percentage
-     * @return Additional seconds to add to the minimum timelock
-     */
-    function _calculateAdditionalTimelock() internal view returns (uint32) {
-        uint256 currentShareBps = getCurrentVaultShareBps();
-
-        if (currentShareBps >= minVaultShareBps) {
-            return 0;
+        // Prevent underflows
+        if (shares > vaultInternalShares || shares > globalTotalShares) {
+            return type(uint32).max; // Or revert with "Invalid redemption amount"
         }
 
-        // Calculate percentage below minimum (in basis points)
-        uint256 bpsDifference = minVaultShareBps - currentShareBps;
+        // Simulate state after redemption
+        uint256 newVaultInternalShares = vaultInternalShares - shares;
+        uint256 newGlobalTotalShares = globalTotalShares - shares;
+
+        // Avoid division by zero
+        uint256 vaultShareBpsAfterRedemption = newGlobalTotalShares == 0
+            ? 0
+            : (newVaultInternalShares * 10_000) / newGlobalTotalShares;
+
+        // If vault remains healthy, return base timelock
+        if (vaultShareBpsAfterRedemption >= minVaultShareBps) {
+            return minTimelock;
+        }
+
+        // Penalty calculation (exponential scaling)
+        uint256 bpsDifference = minVaultShareBps - vaultShareBpsAfterRedemption;
         uint256 percentageBelow = (bpsDifference * 100) / minVaultShareBps;
+        uint256 exponentialFactor = percentageBelow * percentageBelow;
 
-        // Square the percentage for exponential effect
-        // percentageBelow is 0-100, so square won't overflow
-        uint256 exponentialFactor = (percentageBelow * percentageBelow);
-
-        // Scale the timelock: base * (percentageBelow^2 / 100)
-        return uint32((minTimelock * exponentialFactor) / 100);
+        return minTimelock + uint32((minTimelock * exponentialFactor) / 100);
     }
 
     /**
@@ -203,13 +209,14 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
         uint256 assets = _convertToAssets(shares, Math.Rounding.Floor);
 
+        uint32 totalTimelock = previewRedeemTimelock(shares);
+
         _share.burn(owner, shares);
         internalShares -= shares;
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
         // Calculate total timelock including additional time based on vault state
-        uint32 totalTimelock = minTimelock + _calculateAdditionalTimelock();
 
         // If there's an existing request, we update it and reset timelock
         if (request.shares > 0) {

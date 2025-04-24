@@ -4,6 +4,7 @@ pragma solidity >=0.8.29 <0.9.0;
 import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
 import {console2} from "forge-std/src/console2.sol";
 
+import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
 import {VaultaireVault} from "../src/VaultaireVault.sol";
 import {ERC7575Share} from "../src/ERC7575Share.sol";
 import {IERC7575} from "../src/interfaces/IERC7575.sol";
@@ -277,5 +278,98 @@ contract VaultaireVaultTest is BaseVaultaireTest {
 
         // Since we're using 1:1 ratio initially, the share BPS should be 10000 (100%)
         assertEq(vault.getCurrentVaultShareBps(), 10000, "Current vault share BPS should be 100%");
+    }
+
+    /// @dev Test the exponential timelock calculation with different redemption amounts
+    function test_ExponentialTimelock() external {
+        // First deposit some assets to establish a baseline
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        asset2.approve(address(vault2), depositAmount);
+        vault2.deposit(depositAmount, user1);
+
+        // Initial state should be healthy (100% ratio)
+        uint256 smallRedemption = 10 ether; // 10% redemption
+        uint256 timelock = vault.previewRedeemTimelock(smallRedemption);
+        assertEq(timelock, REDEMPTION_TIMELOCK, "Should only have base timelock when healthy");
+
+        // Try with a larger redemption that would put us below minVaultShareBps
+        uint256 largeRedemption = 95 ether; // 95% redemption
+        uint256 increasedTimelock = vault.previewRedeemTimelock(largeRedemption);
+        assertTrue(increasedTimelock > REDEMPTION_TIMELOCK, "Timelock should increase for large redemptions");
+
+        // Test an even larger redemption
+        uint256 veryLargeRedemption = 99 ether; // 90% redemption
+        uint256 maxTimelock = vault.previewRedeemTimelock(veryLargeRedemption);
+        assertTrue(maxTimelock > increasedTimelock, "Timelock should be even higher for very large redemptions");
+
+        // Verify actual redemption matches preview
+        uint256 previewedTimelock = vault.previewRedeemTimelock(largeRedemption);
+        vault.requestRedeem(largeRedemption, user1, user1);
+
+        VaultRedeem.RedemptionRequest memory redeemRequest = vault.pendingRedeemRequestData(user1);
+        assertEq(
+            redeemRequest.claimableTimestamp,
+            previewedTimelock + uint32(block.timestamp),
+            "Actual timelock should match preview"
+        );
+        vm.stopPrank();
+    }
+
+    /// @dev Test the timelock preview with various redemption sizes
+    function test_TimelockPreviewWithDifferentSizes() external {
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+        asset2.approve(address(vault2), depositAmount);
+        vault2.deposit(depositAmount, user1);
+
+        // Test different redemption sizes
+        uint256[] memory testAmounts = new uint256[](4);
+        testAmounts[0] = 80 ether; // 10% - should be healthy
+        testAmounts[1] = 91 ether; // 40% - right in the minimum minimum
+        testAmounts[2] = 95 ether; // 60% - below minimum
+        testAmounts[3] = 99 ether; // 90% - significantly below minimum
+
+        uint256 previousTimelock = 0;
+
+        for (uint256 i = 0; i < testAmounts.length; i++) {
+            uint256 currentTimelock = vault.previewRedeemTimelock(testAmounts[i]);
+
+            if (i > 0) {
+                assertTrue(
+                    currentTimelock > previousTimelock,
+                    "Timelock should increase with larger redemption amounts"
+                );
+            }
+
+            previousTimelock = currentTimelock;
+        }
+        vm.stopPrank();
+    }
+
+    /// @dev Test edge cases for timelock preview
+    function test_TimelockPreviewEdgeCases() external {
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        // Test zero amount
+        uint256 zeroTimelock = vault.previewRedeemTimelock(0);
+        assertEq(zeroTimelock, REDEMPTION_TIMELOCK, "Zero redemption should return base timelock");
+
+        // Test max amount
+        uint256 maxTimelock = vault.previewRedeemTimelock(depositAmount);
+        assertTrue(maxTimelock > REDEMPTION_TIMELOCK, "Full redemption should have increased timelock");
+
+        // Test tiny amount
+        uint256 tinyTimelock = vault.previewRedeemTimelock(0.1 ether);
+        assertEq(tinyTimelock, REDEMPTION_TIMELOCK, "Tiny redemption should return base timelock");
+
+        vm.stopPrank();
     }
 }
