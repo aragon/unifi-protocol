@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+// import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { IERC7575 } from "../interfaces/IERC7575.sol";
 import { ERC7575Share } from "../ERC7575Share.sol";
 
@@ -19,8 +19,8 @@ import { ERC7575Share } from "../ERC7575Share.sol";
 abstract contract VaultCore is IERC7575, SingleStrategyManager {
     using Math for uint256;
 
-    ERC7575Share internal immutable _share;
-    IERC20 internal immutable _asset;
+    ERC7575Share internal _share;
+    IERC20 internal _asset;
     uint256 public minVaultShareBps; // 10_000 -> 100%
 
     uint256 internal internalShares = 0;

@@ -59,6 +59,7 @@ abstract contract VaultAuth is VaultOperator, EIP712 {
         bytes32 r;
         bytes32 s;
         uint8 v;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             r := mload(add(signature, 0x20))
             s := mload(add(signature, 0x40))
@@ -73,6 +74,7 @@ abstract contract VaultAuth is VaultOperator, EIP712 {
                     keccak256(
                         abi.encode(
                             keccak256(
+                                // solhint-disable-next-line max-line-length
                                 "AuthorizeOperator(address controller,address operator,bool approved,bytes32 nonce,uint256 deadline)"
                             ),
                             controller,

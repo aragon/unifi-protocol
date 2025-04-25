@@ -2,8 +2,6 @@
 pragma solidity ^0.8.29;
 
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { console2 } from "forge-std/src/console2.sol";
-
 import { DAO } from "@aragon/osx/core/dao/DAO.sol";
 
 /// mocks IDAO for the governanceERC20 auth modifier
@@ -15,21 +13,19 @@ contract MockDAOSimplePermission {
 }
 
 contract MockDAORevertFallback {
+    error MockDAORevertFallbackError();
+
     function hasPermission(address, address, bytes32, bytes calldata) public pure returns (bool) {
         // always pass
         return true;
     }
 
-    fallback() external {
-        revert("MockDAORevertFallback");
+    fallback() external payable {
+        revert MockDAORevertFallbackError();
     }
 
     receive() external payable {
-        revert("MockDAORevertFallback");
-    }
-
-    function gimme() public payable {
-        // do nothing but accept ether
+        revert MockDAORevertFallbackError();
     }
 }
 

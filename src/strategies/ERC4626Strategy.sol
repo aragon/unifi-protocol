@@ -19,7 +19,7 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
     using Math for uint256;
 
     // The target ERC4626 vault where assets are invested
-    IERC4626 public immutable targetVault;
+    IERC4626 public targetVault;
 
     // Total shares owned in the target vault
     uint256 public totalShares;
@@ -38,6 +38,9 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
      * @dev Error thrown when harvest operation fails.
      */
     error HarvestFailed();
+
+    error ReceivedFewerShares(uint256 received, uint256 expected);
+    error OnlyDaoCanTriggerEmergencyExit(address caller, address dao);
 
     constructor(
         IERC20 _underlyingAsset,
@@ -79,7 +82,9 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
         shares = targetVault.deposit(assets, address(this));
 
         // Sanity check - received at least the expected shares
-        require(shares >= expectedShares, "ERC4626Strategy: received fewer shares than expected");
+        if (shares < expectedShares) {
+            revert ReceivedFewerShares(shares, expectedShares);
+        }
 
         // Update accounting
         totalPrincipal += assets;
@@ -184,7 +189,9 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
      * @dev Can only be called by the DAO.
      */
     function emergencyExit() external {
-        require(msg.sender == address(dao()), "ERC4626Strategy: only DAO can trigger emergency exit");
+        if (msg.sender != address(dao())) {
+            revert OnlyDaoCanTriggerEmergencyExit(msg.sender, address(dao()));
+        }
 
         uint256 sharesToRedeem = totalShares;
         if (sharesToRedeem == 0) return;

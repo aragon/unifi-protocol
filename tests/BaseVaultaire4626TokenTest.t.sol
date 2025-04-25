@@ -2,40 +2,34 @@
 pragma solidity >=0.8.29;
 
 import { Test } from "forge-std/src/Test.sol";
-import { console2 } from "forge-std/src/console2.sol";
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 import { Vaultaire4626TokenVault } from "../src/Vaultaire4626TokenVault.sol";
-import "../src/ERC7575Share.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@aragon/commons/dao/IDAO.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MockERC4626 } from "./mocks/MockERC4626.sol";
 
 import { MintableERC20 } from "./mocks/MintableERC20.sol";
-// import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
-import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
 import { DAO } from "@aragon/osx/core/dao/DAO.sol";
 import { createTestDAO } from "./mocks/MockDAO.sol";
-import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStrategy.sol";
 
 contract BaseVaultaire4626TokenTest is Test {
     // Constants
-    uint256 constant INITIAL_ASSETS = 10_000 ether;
-    uint256 constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
-    uint32 constant REDEMPTION_TIMELOCK = 1 days;
+    uint256 public constant INITIAL_ASSETS = 10_000 ether;
+    uint256 public constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
+    uint32 public constant REDEMPTION_TIMELOCK = 1 days;
 
     // Test accounts
-    address deployer;
-    address user1;
-    address user2;
-    address operator;
+    address public deployer;
+    address public user1;
+    address public user2;
+    address public operator;
 
     // Contracts
-    DAO dao;
-    MintableERC20 assetCollateral;
-    MockERC4626 asset;
-    ERC7575Share share;
-    Vaultaire4626TokenVault vault;
+    DAO public dao;
+    MintableERC20 public assetCollateral;
+    MockERC4626 public asset;
+    ERC7575Share public share;
+    Vaultaire4626TokenVault public vault;
 
     constructor() {
         // Create test accounts

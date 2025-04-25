@@ -8,10 +8,9 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC7575Share } from "./ERC7575Share.sol";
 import { IERC7575 } from "./interfaces/IERC7575.sol";
-import { IERC7540Operator, IERC7540Redeem } from "./interfaces/IERC7540.sol";
+import { IERC7540Operator } from "./interfaces/IERC7540.sol";
 
 import { VaultCore } from "./vault/VaultCore.sol";
-import { VaultOperator } from "./vault/VaultOperator.sol";
 import { VaultAuth } from "./vault/VaultOperatorAuth.sol";
 import { VaultRedeem } from "./vault/VaultRedeem.sol";
 

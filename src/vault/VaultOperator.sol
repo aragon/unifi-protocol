@@ -9,7 +9,7 @@ import { IERC7540Operator } from "../interfaces/IERC7540.sol";
  */
 abstract contract VaultOperator is IERC7540Operator {
     /// @dev Mapping of controllers to their approved operators
-    mapping(address => mapping(address => bool)) public isOperator;
+    mapping(address controller => mapping(address operator => bool)) public isOperator;
 
     /**
      * @dev Error thrown when an address attempts to set itself as its own operator.

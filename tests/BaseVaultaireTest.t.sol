@@ -3,14 +3,12 @@ pragma solidity >=0.8.29;
 
 import { Test } from "forge-std/src/Test.sol";
 
-import "../src/VaultaireVault.sol";
-import "../src/ERC7575Share.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@aragon/commons/dao/IDAO.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MockERC4626 } from "./mocks/MockERC4626.sol";
 
 import { MintableERC20 } from "./mocks/MintableERC20.sol";
-// import {SingleStrategyManager} from "../src/SingleStrategyManager.sol";
 import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
 import { DAO } from "@aragon/osx/core/dao/DAO.sol";
 import { createTestDAO } from "./mocks/MockDAO.sol";
@@ -18,27 +16,27 @@ import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStra
 
 contract BaseVaultaireTest is Test {
     // Constants
-    uint256 constant INITIAL_ASSETS = 10_000 ether;
-    uint256 constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
-    uint32 constant REDEMPTION_TIMELOCK = 1 days;
+    uint256 public constant INITIAL_ASSETS = 10_000 ether;
+    uint256 public constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
+    uint32 public constant REDEMPTION_TIMELOCK = 1 days;
 
     // Test accounts
-    address deployer;
-    address user1;
-    address user2;
-    address operator;
+    address public deployer;
+    address public user1;
+    address public user2;
+    address public operator;
 
     // Contracts
-    DAO dao;
-    MintableERC20 asset;
-    MintableERC20 asset2;
-    ERC7575Share share;
-    VaultaireVault vault;
-    VaultaireVault vault2;
-    ERC4626Strategy strategy;
-    ERC4626Strategy strategy2;
-    MockERC4626 lendingVault;
-    MockERC4626 lendingVault2;
+    DAO public dao;
+    MintableERC20 public asset;
+    MintableERC20 public asset2;
+    ERC7575Share public share;
+    VaultaireVault public vault;
+    VaultaireVault public vault2;
+    ERC4626Strategy public strategy;
+    ERC4626Strategy public strategy2;
+    MockERC4626 public lendingVault;
+    MockERC4626 public lendingVault2;
 
     constructor() {
         // Create test accounts

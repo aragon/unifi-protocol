@@ -27,8 +27,7 @@
     "forge",
     "foundry",
     "smart-contracts",
-    "solidity",
-    "template"
+    "solidity"
   ],
   "private": true,
   "scripts": {

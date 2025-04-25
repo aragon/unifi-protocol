@@ -1,25 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaire4626TokenTest} from "./BaseVaultaire4626TokenTest.t.sol";
+import { BaseVaultaire4626TokenTest } from "./BaseVaultaire4626TokenTest.t.sol";
 // import { console2 } from "forge-std/src/console2.sol";
 
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
-import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {createTestDAO} from "./mocks/MockDAO.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import { IERC7540Operator } from "../src/interfaces/IERC7540.sol";
 
 contract VaultaireVaultTest is BaseVaultaire4626TokenTest {
-    /// @dev A function invoked before each test case is run.
-    function setUp() public virtual {}
-
     /// @dev Test if the vault is correctly configured after deployment
     function test_VaultInitialization() external view {
         assertEq(address(vault.asset()), address(asset), "Incorrect asset address");
@@ -31,8 +19,7 @@ contract VaultaireVaultTest is BaseVaultaire4626TokenTest {
     function test_ShareTokenInitialization() external view {
         assertEq(share.vault(address(asset)), address(vault), "Incorrect vault mapping in share token");
         assertTrue(
-            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""),
-            "Vault doesn't have VAULT_ROLE"
+            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""), "Vault doesn't have VAULT_ROLE"
         );
         assertEq(share.name(), "uUSD", "Incorrect share token name");
         assertEq(share.symbol(), "uUSD", "Incorrect share token symbol");

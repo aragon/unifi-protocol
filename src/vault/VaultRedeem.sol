@@ -26,7 +26,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
     uint256 internal _totalPendingRedeemAssets;
 
     /// @dev Mapping of controllers to their redemption requests
-    mapping(address => RedemptionRequest) internal _pendingRedemption;
+    mapping(address controller => RedemptionRequest request) internal _pendingRedemption;
 
     struct RedemptionRequest {
         uint256 assets;
