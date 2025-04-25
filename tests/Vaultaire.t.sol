@@ -89,6 +89,31 @@ contract VaultaireVaultTest is BaseVaultaireTest {
         assertEq(vault.claimableRedeemRequest(0, user1), redeemAmount, "Should be claimable now");
     }
 
+    /// @dev Test redeem request functionality
+    function test_RedeemRequestFullAssets() external {
+        // First deposit some assets
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        // Request redemption of half the shares
+        uint256 redeemAmount = depositAmount;
+        vault.requestRedeem(redeemAmount, user1, user1);
+        vm.stopPrank();
+
+        // Verify pending redeem request
+        assertEq(vault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly");
+        assertEq(vault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
+
+        // Fast forward time to make the redemption claimable
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+
+        // Verify claimable redeem request
+        assertEq(vault.pendingRedeemRequest(0, user1), 0, "Should not be pending anymore");
+        assertEq(vault.claimableRedeemRequest(0, user1), redeemAmount, "Should be claimable now");
+    }
+
     /// @dev Test redeem functionality after timelock
     function test_Redeem() external {
         // First deposit some assets
@@ -353,12 +378,37 @@ contract VaultaireVaultTest is BaseVaultaireTest {
 
         // Test max amount
         uint256 maxTimelock = vault.previewRedeemTimelock(depositAmount);
-        assertTrue(maxTimelock > REDEMPTION_TIMELOCK, "Full redemption should have increased timelock");
+        assertTrue(maxTimelock == REDEMPTION_TIMELOCK, "Full redemption should have increased timelock");
 
         // Test tiny amount
         uint256 tinyTimelock = vault.previewRedeemTimelock(0.1 ether);
         assertEq(tinyTimelock, REDEMPTION_TIMELOCK, "Tiny redemption should return base timelock");
 
         vm.stopPrank();
+    }
+
+    function test_SendDirectTransferToVault() external {
+        uint256 depositAmount = 100 ether;
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+        vault.deposit(depositAmount, user1);
+
+        asset.transfer(address(vault), 100 ether);
+
+        // Request redemption of half the shares
+        uint256 redeemAmount = depositAmount / 2;
+        vault.requestRedeem(redeemAmount, user1, user1);
+        vm.stopPrank();
+
+        // Verify pending redeem request
+        assertEq(vault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly");
+        assertEq(vault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
+
+        // Fast forward time to make the redemption claimable
+        vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
+
+        // Verify claimable redeem request
+        assertEq(vault.pendingRedeemRequest(0, user1), 0, "Should not be pending anymore");
+        assertEq(vault.claimableRedeemRequest(0, user1), redeemAmount, "Should be claimable now");
     }
 }

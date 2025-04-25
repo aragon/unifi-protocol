@@ -145,7 +145,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
             : (newVaultInternalShares * 10_000) / newGlobalTotalShares;
 
         // If vault remains healthy, return base timelock
-        if (vaultShareBpsAfterRedemption >= minVaultShareBps) {
+        if (vaultShareBpsAfterRedemption >= minVaultShareBps || newGlobalTotalShares == 0) {
             return minTimelock;
         }
 
