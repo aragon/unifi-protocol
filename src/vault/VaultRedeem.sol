@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC7540Redeem } from "../interfaces/IERC7540.sol";
-import { VaultOperator } from "./VaultOperator.sol";
-import { VaultCore } from "./VaultCore.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC7540Redeem} from "../interfaces/IERC7540.sol";
+import {VaultOperator} from "./VaultOperator.sol";
+import {VaultCore} from "./VaultCore.sol";
 
 /**
  * @title VaultaireRedeem
@@ -140,8 +140,9 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         uint256 newGlobalTotalShares = globalTotalShares - shares;
 
         // Avoid division by zero
-        uint256 vaultShareBpsAfterRedemption =
-            newGlobalTotalShares == 0 ? 0 : (newVaultInternalShares * 10_000) / newGlobalTotalShares;
+        uint256 vaultShareBpsAfterRedemption = newGlobalTotalShares == 0
+            ? 0
+            : (newVaultInternalShares * 10_000) / newGlobalTotalShares;
 
         // If vault remains healthy, return base timelock
         if (vaultShareBpsAfterRedemption >= minVaultShareBps) {
@@ -165,10 +166,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         address owner,
         uint256 assets,
         uint256 shares
-    )
-        internal
-        virtual
-    {
+    ) internal virtual {
         _totalPendingRedeemAssets -= assets;
         SafeERC20.safeTransfer(_asset, receiver, assets);
 
@@ -180,11 +178,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         uint256 shares,
         address controller,
         address owner
-    )
-        external
-        override
-        returns (uint256 requestId)
-    {
+    ) external override returns (uint256 requestId) {
         if (owner != msg.sender && !isOperator[owner][msg.sender]) revert InvalidOwner(msg.sender, owner);
 
         uint256 available = _share.balanceOf(owner);
@@ -236,12 +230,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
     function claimableRedeemRequest(
         uint256,
         address controller
-    )
-        public
-        view
-        override
-        returns (uint256 claimableShares)
-    {
+    ) public view override returns (uint256 claimableShares) {
         RedemptionRequest memory request = _pendingRedemption[controller];
         if (request.claimableTimestamp <= block.timestamp && request.shares > 0) {
             return request.shares;

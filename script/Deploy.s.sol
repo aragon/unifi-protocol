@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { VaultaireVault } from "../src/VaultaireVault.sol";
-import { ERC7575Share } from "../src/ERC7575Share.sol";
+import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
 
-import { MintableERC20 } from "../tests/mocks/MintableERC20.sol";
+import {MintableERC20} from "../tests/mocks/MintableERC20.sol";
 
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 
-import { BaseScript } from "./Base.s.sol";
-import { console2 } from "forge-std/src/console2.sol";
+import {BaseScript} from "./Base.s.sol";
+import {console2} from "forge-std/src/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
@@ -31,16 +31,16 @@ contract Deploy is BaseScript {
         address tokenBridge = address(this);
 
         // 1. Deploying Mock Tokens
-        MintableERC20 asset1 = new MintableERC20(broadcaster, "fakeUSDC", "fUSDC");
+        MintableERC20 asset1 = new MintableERC20(broadcaster, "fakeUSDC", "fUSDC", 18);
         console2.log("fake USDC: ", address(asset1));
 
-        MintableERC20 asset2 = new MintableERC20(broadcaster, "fakeUSDs", "fUSDs");
+        MintableERC20 asset2 = new MintableERC20(broadcaster, "fakeUSDs", "fUSDs", 18);
         console2.log("fake USDs: ", address(asset2));
 
-        MintableERC20 asset3 = new MintableERC20(broadcaster, "fakeUSDT", "fUSDT");
+        MintableERC20 asset3 = new MintableERC20(broadcaster, "fakeUSDT", "fUSDT", 18);
         console2.log("fake USDT: ", address(asset3));
 
-        MintableERC20 asset4 = new MintableERC20(broadcaster, "fakeGHO", "fGHO");
+        MintableERC20 asset4 = new MintableERC20(broadcaster, "fakeGHO", "fGHO", 18);
         console2.log("fake GHO: ", address(asset4));
 
         asset1.mint(user, 100 ether);

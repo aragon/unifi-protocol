@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
-import { SingleStrategyManager } from "./SingleStrategyManager.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import {SingleStrategyManager} from "./SingleStrategyManager.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 // import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import { IERC7575 } from "../interfaces/IERC7575.sol";
-import { ERC7575Share } from "../ERC7575Share.sol";
+import {IERC7575} from "../interfaces/IERC7575.sol";
+import {ERC7575Share} from "../ERC7575Share.sol";
 
 /**
  * @title VaultaireCore
@@ -25,6 +26,8 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
 
     uint256 internal internalShares = 0;
     uint256 internal internalAssets = 0;
+
+    uint8 private _decimalsOffsetValue;
 
     /**
      * @dev Emitted when the minimum vault share basis points are updated.
@@ -65,6 +68,16 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
         _asset = asset_;
         _share = share_;
         minVaultShareBps = _minVaultShareBps;
+
+        // Calculate and store the decimals offset
+        uint8 standardDecimals = 18;
+        uint8 assetDecimals = IERC20Metadata(address(_asset)).decimals();
+
+        if (assetDecimals > standardDecimals) {
+            _decimalsOffsetValue = assetDecimals - standardDecimals;
+        } else {
+            _decimalsOffsetValue = standardDecimals - assetDecimals;
+        }
     }
 
     // @inheritdoc IERC7575
@@ -176,7 +189,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
     function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256);
 
     function _decimalsOffset() internal view virtual returns (uint8) {
-        return 0;
+        return _decimalsOffsetValue;
     }
 
     /**
