@@ -170,7 +170,7 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
      * @return Yield amount.
      */
     function calculateYield() public view returns (uint256) {
-        return targetVault.balanceOf(address(this)) - totalPrincipal;
+        return targetVault.maxWithdraw(address(this)) - totalPrincipal;
     }
 
     /**
