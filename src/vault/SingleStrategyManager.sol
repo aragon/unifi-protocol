@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
-import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
-import {IVaultAllocationStrategy} from "../interfaces/IVaultAllocationStrategy.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import { DaoAuthorizable } from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import { IVaultAllocationStrategy } from "../interfaces/IVaultAllocationStrategy.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title SingleStrategyManager
@@ -35,7 +35,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      */
     error RatioExceeds100Percent(uint256 ratio);
 
-    constructor(IDAO dao_) DaoAuthorizable(dao_) {}
+    constructor(IDAO dao_) DaoAuthorizable(dao_) { }
 
     /**
      * @notice Assigns a new strategy address (or updates the existing one).

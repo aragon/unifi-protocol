@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {SingleStrategyManager} from "./SingleStrategyManager.sol";
-import {AggregatorV3Interface} from "../interfaces/IAggregatorV3Chainlink.sol";
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import { SingleStrategyManager } from "./SingleStrategyManager.sol";
+import { AggregatorV3Interface } from "../interfaces/IAggregatorV3Chainlink.sol";
 
 abstract contract VaultDefaultChecker is SingleStrategyManager {
-    AggregatorV3Interface private immutable priceFeed;
-    int256 private immutable defaultPriceThreshold;
+    AggregatorV3Interface private priceFeed;
+    int256 private defaultPriceThreshold;
     bool public isPaused;
 
     event VaultPaused(int256 currentPrice, int256 threshold);
@@ -28,7 +27,7 @@ abstract contract VaultDefaultChecker is SingleStrategyManager {
         if (address(priceFeed) == address(0)) revert NotAuthorized();
         if (defaultPriceThreshold <= 0) revert NotAuthorized();
 
-        (, int256 price, , uint256 updatedAt, ) = priceFeed.latestRoundData();
+        (, int256 price,, uint256 updatedAt,) = priceFeed.latestRoundData();
 
         // Ensure the price feed data is not stale (e.g., older than 1 hour)
         if (block.timestamp - updatedAt > 1 hours) {

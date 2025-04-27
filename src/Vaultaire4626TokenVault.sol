@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {ERC7575Share} from "./ERC7575Share.sol";
-import {IERC7575} from "./interfaces/IERC7575.sol";
-import {IERC7540Operator} from "./interfaces/IERC7540.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { ERC7575Share } from "./ERC7575Share.sol";
+import { IERC7575 } from "./interfaces/IERC7575.sol";
+import { IERC7540Operator } from "./interfaces/IERC7540.sol";
 
-import {VaultCore} from "./vault/VaultCore.sol";
-import {VaultAuth} from "./vault/VaultOperatorAuth.sol";
-import {VaultRedeem} from "./vault/VaultRedeem.sol";
-import {SingleStrategyManager} from "./vault/SingleStrategyManager.sol";
-import {VaultDefaultChecker} from "./vault/VaultDefaultChecker.sol";
+import { VaultCore } from "./vault/VaultCore.sol";
+import { VaultAuth } from "./vault/VaultOperatorAuth.sol";
+import { VaultRedeem } from "./vault/VaultRedeem.sol";
+import { SingleStrategyManager } from "./vault/SingleStrategyManager.sol";
+import { VaultDefaultChecker } from "./vault/VaultDefaultChecker.sol";
 
 /**
  * @title VaultaireVault
@@ -64,10 +64,8 @@ contract Vaultaire4626TokenVault is VaultAuth, VaultRedeem {
      * @dev Implementation of ERC-165 interface detection
      */
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return
-            interfaceId == type(IERC7540Operator).interfaceId ||
-            interfaceId == type(IERC7575).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
+        return interfaceId == type(IERC7540Operator).interfaceId || interfaceId == type(IERC7575).interfaceId
+            || interfaceId == type(IERC165).interfaceId;
     }
 
     /**

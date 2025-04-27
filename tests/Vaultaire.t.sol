@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
+import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
 
-import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
-import {IERC7540Operator} from "../src/interfaces/IERC7540.sol";
+import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import { IERC7540Operator } from "../src/interfaces/IERC7540.sol";
 
 contract VaultaireVaultTest is BaseVaultaireTest {
     /// @dev Test if the vault is correctly configured after deployment
@@ -19,8 +19,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
     function test_ShareTokenInitialization() external view {
         assertEq(share.vault(address(asset)), address(vault), "Incorrect vault mapping in share token");
         assertTrue(
-            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""),
-            "Vault doesn't have VAULT_ROLE"
+            dao.hasPermission(address(share), address(vault), share.VAULT_ROLE(), ""), "Vault doesn't have VAULT_ROLE"
         );
         assertEq(share.name(), "uUSD", "Incorrect share token name");
         assertEq(share.symbol(), "uUSD", "Incorrect share token symbol");
@@ -390,8 +389,7 @@ contract VaultaireVaultTest is BaseVaultaireTest {
 
             if (i > 0) {
                 assertTrue(
-                    currentTimelock > previousTimelock,
-                    "Timelock should increase with larger redemption amounts"
+                    currentTimelock > previousTimelock, "Timelock should increase with larger redemption amounts"
                 );
             }
 

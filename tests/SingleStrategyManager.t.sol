@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
 
-import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
-import {IERC7575} from "../src/interfaces/IERC7575.sol";
+import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
+import { IERC7575 } from "../src/interfaces/IERC7575.sol";
 
 contract SingleStrategyManagerTest is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.

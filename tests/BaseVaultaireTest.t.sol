@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {Test} from "forge-std/src/Test.sol";
+import { Test } from "forge-std/src/Test.sol";
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {MockERC4626} from "./mocks/MockERC4626.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { MockERC4626 } from "./mocks/MockERC4626.sol";
 
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {createTestDAO} from "./mocks/MockDAO.sol";
-import {IVaultAllocationStrategy} from "../src/interfaces/IVaultAllocationStrategy.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
+import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
+import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStrategy.sol";
 
+/* solhint-disable max-states-count */
 contract BaseVaultaireTest is Test {
     // Constants
     uint256 public constant INITIAL_ASSETS = 10_000 ether;
@@ -64,13 +65,7 @@ contract BaseVaultaireTest is Test {
         // Deploy vault
         vm.startPrank(deployer);
         vault = new VaultaireVault(
-            IERC20(address(asset)),
-            share,
-            dao,
-            REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS,
-            address(0),
-            0
+            IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
         );
         vm.stopPrank();
 
@@ -100,13 +95,7 @@ contract BaseVaultaireTest is Test {
         // Deploy vault 2
         vm.startPrank(deployer);
         vault2 = new VaultaireVault(
-            IERC20(address(asset2)),
-            share,
-            dao,
-            REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS,
-            address(0),
-            0
+            IERC20(address(asset2)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
         );
         vm.stopPrank();
 

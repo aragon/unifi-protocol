@@ -1,39 +1,40 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
 
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
 
-import {BaseScript} from "./Base.s.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseScript } from "./Base.s.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
-    address dao;
-    address user;
+    address public dao;
+    address public user;
 
-    IERC20 USDC;
-    IERC20 USDT;
-    IERC20 USDS;
-    IERC20 eUSD;
+    /* solhint-disable var-name-mixedcase */
+    IERC20 public USDC;
+    IERC20 public USDT;
+    IERC20 public USDS;
+    IERC20 public eUSD;
 
-    address USDC_PRICE_FEED;
-    address USDT_PRICE_FEED;
-    address USDS_PRICE_FEED;
-    address eUSD_PRICE_FEED;
+    address public USDCPriceFeed;
+    address public USDTPriceFeed;
+    address public USDSPriceFeed;
+    address public eUSDPriceFeed;
 
-    int256 MIN_DEFAULT_PRICE_THRESHOLD;
+    int256 public MIN_DEFAULT_PRICE_THRESHOLD;
 
-    VaultaireVault USDCVault;
-    VaultaireVault USDSVault;
-    VaultaireVault USDTVault;
-    VaultaireVault eUSDVault;
+    VaultaireVault public USDCVault;
+    VaultaireVault public USDSVault;
+    VaultaireVault public USDTVault;
+    VaultaireVault public eUSDVault;
 
     function run() public broadcast {
         dao = vm.envAddress("PROD_DAO");
@@ -53,47 +54,23 @@ contract Deploy is BaseScript {
             uint32 vaultTimestamp = uint32(vm.envUint("PROD_VAULT_TIMESTAMP"));
             uint256 minVaultShareBps = vm.envUint("PROD_MIN_VAULT_SHARE_BPS");
 
-            USDC_PRICE_FEED = vm.envAddress("PROD_USDC_CHAINLINK_FEED");
-            USDT_PRICE_FEED = vm.envAddress("PROD_USDT_CHAINLINK_FEED");
-            USDS_PRICE_FEED = vm.envAddress("PROD_USDS_CHAINLINK_FEED");
-            eUSD_PRICE_FEED = vm.envAddress("PROD_EUSD_CHAINLINK_FEED");
+            USDCPriceFeed = vm.envAddress("PROD_USDC_CHAINLINK_FEED");
+            USDTPriceFeed = vm.envAddress("PROD_USDT_CHAINLINK_FEED");
+            USDSPriceFeed = vm.envAddress("PROD_USDS_CHAINLINK_FEED");
+            eUSDPriceFeed = vm.envAddress("PROD_EUSD_CHAINLINK_FEED");
             MIN_DEFAULT_PRICE_THRESHOLD = vm.envInt("PROD_MIN_DEFAULT_PRICE_THRESHOLD");
 
             USDCVault = new VaultaireVault(
-                USDC,
-                uUSD,
-                IDAO(dao),
-                vaultTimestamp,
-                minVaultShareBps,
-                USDC_PRICE_FEED,
-                MIN_DEFAULT_PRICE_THRESHOLD
+                USDC, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDCPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
             );
             USDTVault = new VaultaireVault(
-                USDT,
-                uUSD,
-                IDAO(dao),
-                vaultTimestamp,
-                minVaultShareBps,
-                USDT_PRICE_FEED,
-                MIN_DEFAULT_PRICE_THRESHOLD
+                USDT, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDTPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
             );
             USDSVault = new VaultaireVault(
-                USDS,
-                uUSD,
-                IDAO(dao),
-                vaultTimestamp,
-                minVaultShareBps,
-                USDS_PRICE_FEED,
-                MIN_DEFAULT_PRICE_THRESHOLD
+                USDS, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDSPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
             );
             eUSDVault = new VaultaireVault(
-                eUSD,
-                uUSD,
-                IDAO(dao),
-                vaultTimestamp,
-                minVaultShareBps,
-                eUSD_PRICE_FEED,
-                MIN_DEFAULT_PRICE_THRESHOLD
+                eUSD, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, eUSDPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
             );
         }
 

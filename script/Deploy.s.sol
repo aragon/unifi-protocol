@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import {VaultaireVault} from "../src/VaultaireVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
+import { VaultaireVault } from "../src/VaultaireVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
 
-import {MintableERC20} from "../tests/mocks/MintableERC20.sol";
-import {MockERC4626} from "../tests/mocks/MockERC4626.sol";
-import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
+import { MintableERC20 } from "../tests/mocks/MintableERC20.sol";
+import { MockERC4626 } from "../tests/mocks/MockERC4626.sol";
+import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
 
-import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import { IDAO } from "@aragon/commons/dao/IDAO.sol";
 
-import {BaseScript} from "./Base.s.sol";
-import {console2} from "forge-std/src/console2.sol";
+import { BaseScript } from "./Base.s.sol";
+import { console2 } from "forge-std/src/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
-    VaultaireVault fUSDCVault;
-    VaultaireVault fUSDSVault;
-    VaultaireVault fUSDTVault;
-    VaultaireVault fGHOVault;
+    VaultaireVault public fUSDCVault;
+    VaultaireVault public fUSDSVault;
+    VaultaireVault public fUSDTVault;
+    VaultaireVault public fGHOVault;
 
     function run() public broadcast {
         address dao = vm.envAddress("DAO");

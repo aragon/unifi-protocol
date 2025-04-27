@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {Test} from "forge-std/src/Test.sol";
+import { Test } from "forge-std/src/Test.sol";
 
-import {Vaultaire4626TokenVault} from "../src/Vaultaire4626TokenVault.sol";
-import {ERC7575Share} from "../src/ERC7575Share.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {MockERC4626} from "./mocks/MockERC4626.sol";
+import { Vaultaire4626TokenVault } from "../src/Vaultaire4626TokenVault.sol";
+import { ERC7575Share } from "../src/ERC7575Share.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { MockERC4626 } from "./mocks/MockERC4626.sol";
 
-import {MintableERC20} from "./mocks/MintableERC20.sol";
-import {DAO} from "@aragon/osx/core/dao/DAO.sol";
-import {createTestDAO} from "./mocks/MockDAO.sol";
+import { MintableERC20 } from "./mocks/MintableERC20.sol";
+import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import { createTestDAO } from "./mocks/MockDAO.sol";
 
 contract BaseVaultaire4626TokenTest is Test {
     // Constants
@@ -52,13 +52,7 @@ contract BaseVaultaire4626TokenTest is Test {
         // Deploy vault
         vm.startPrank(deployer);
         vault = new Vaultaire4626TokenVault(
-            IERC20(address(asset)),
-            share,
-            dao,
-            REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS,
-            address(0),
-            0
+            IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
         );
         vm.stopPrank();
 
