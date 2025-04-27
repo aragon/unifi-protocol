@@ -68,7 +68,9 @@ contract BaseVaultaireTest is Test {
             share,
             dao,
             REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 
@@ -102,7 +104,9 @@ contract BaseVaultaireTest is Test {
             share,
             dao,
             REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 
@@ -136,7 +140,9 @@ contract BaseVaultaireTest is Test {
             share,
             dao,
             REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 

@@ -23,6 +23,13 @@ contract Deploy is BaseScript {
     IERC20 USDS;
     IERC20 eUSD;
 
+    address USDC_PRICE_FEED;
+    address USDT_PRICE_FEED;
+    address USDS_PRICE_FEED;
+    address eUSD_PRICE_FEED;
+
+    int256 MIN_DEFAULT_PRICE_THRESHOLD;
+
     VaultaireVault USDCVault;
     VaultaireVault USDSVault;
     VaultaireVault USDTVault;
@@ -46,10 +53,48 @@ contract Deploy is BaseScript {
             uint32 vaultTimestamp = uint32(vm.envUint("PROD_VAULT_TIMESTAMP"));
             uint256 minVaultShareBps = vm.envUint("PROD_MIN_VAULT_SHARE_BPS");
 
-            USDCVault = new VaultaireVault(USDC, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            USDTVault = new VaultaireVault(USDT, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            USDSVault = new VaultaireVault(USDS, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            eUSDVault = new VaultaireVault(eUSD, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps);
+            USDC_PRICE_FEED = vm.envAddress("PROD_USDC_CHAINLINK_FEED");
+            USDT_PRICE_FEED = vm.envAddress("PROD_USDT_CHAINLINK_FEED");
+            USDS_PRICE_FEED = vm.envAddress("PROD_USDS_CHAINLINK_FEED");
+            eUSD_PRICE_FEED = vm.envAddress("PROD_EUSD_CHAINLINK_FEED");
+            MIN_DEFAULT_PRICE_THRESHOLD = vm.envInt("PROD_MIN_DEFAULT_PRICE_THRESHOLD");
+
+            USDCVault = new VaultaireVault(
+                USDC,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDC_PRICE_FEED,
+                MIN_DEFAULT_PRICE_THRESHOLD
+            );
+            USDTVault = new VaultaireVault(
+                USDT,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDT_PRICE_FEED,
+                MIN_DEFAULT_PRICE_THRESHOLD
+            );
+            USDSVault = new VaultaireVault(
+                USDS,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDS_PRICE_FEED,
+                MIN_DEFAULT_PRICE_THRESHOLD
+            );
+            eUSDVault = new VaultaireVault(
+                eUSD,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                eUSD_PRICE_FEED,
+                MIN_DEFAULT_PRICE_THRESHOLD
+            );
         }
 
         // 3. Deploying any lending vaults we might want

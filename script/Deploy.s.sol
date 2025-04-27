@@ -43,10 +43,10 @@ contract Deploy is BaseScript {
             uint32 vaultTimestamp = uint32(vm.envUint("VAULT_TIMESTAMP"));
             uint256 minVaultShareBps = vm.envUint("MIN_VAULT_SHARE_BPS");
 
-            fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            fUSDSVault = new VaultaireVault(asset2, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-            fGHOVault = new VaultaireVault(asset4, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+            fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao), vaultTimestamp, minVaultShareBps, address(0), 0);
+            fUSDSVault = new VaultaireVault(asset2, share, IDAO(dao), vaultTimestamp, minVaultShareBps, address(0), 0);
+            fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao), vaultTimestamp, minVaultShareBps, address(0), 0);
+            fGHOVault = new VaultaireVault(asset4, share, IDAO(dao), vaultTimestamp, minVaultShareBps, address(0), 0);
         }
 
         // 3. Deploying any lending vaults we might want

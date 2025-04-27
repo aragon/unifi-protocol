@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import {console2} from "forge-std/src/console2.sol";
-
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
 import {IVaultAllocationStrategy} from "../interfaces/IVaultAllocationStrategy.sol";

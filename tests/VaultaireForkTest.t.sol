@@ -64,14 +64,18 @@ contract VaultaireVaultForkTest is Test {
             share,
             dao,
             REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0x7e860098F58bBFC8648a4311b374B1D669a2bc6B),
+            0.97e18
         );
         usdsVault = new VaultaireVault(
             IERC20(address(usds)),
             share,
             dao,
             REDEMPTION_TIMELOCK,
-            INITIAL_MIN_VAULT_SHARE_BPS
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0x2330aaE3bca5F05169d5f4597964D44522F62930),
+            0.97e18
         );
 
         // Setting the relationships

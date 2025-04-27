@@ -3,6 +3,7 @@ pragma solidity >=0.8.29;
 
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 import {SingleStrategyManager} from "./SingleStrategyManager.sol";
+import {VaultDefaultChecker} from "./VaultDefaultChecker.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -17,7 +18,7 @@ import {ERC7575Share} from "../ERC7575Share.sol";
  * @title VaultaireCore
  * @dev Core implementation of ERC7575 vault functionality
  */
-abstract contract VaultCore is IERC7575, SingleStrategyManager {
+abstract contract VaultCore is IERC7575, VaultDefaultChecker {
     using Math for uint256;
 
     ERC7575Share internal _share;
@@ -64,7 +65,7 @@ abstract contract VaultCore is IERC7575, SingleStrategyManager {
      */
     error InsufficientShareAllowance(address spender, uint256 currentAllowance, uint256 value);
 
-    constructor(IERC20 asset_, ERC7575Share share_, IDAO _dao, uint256 _minVaultShareBps) SingleStrategyManager(_dao) {
+    constructor(IERC20 asset_, ERC7575Share share_, uint256 _minVaultShareBps) {
         _asset = asset_;
         _share = share_;
         minVaultShareBps = _minVaultShareBps;

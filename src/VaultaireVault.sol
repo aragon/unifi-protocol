@@ -3,8 +3,6 @@ pragma solidity >=0.8.29;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {console2} from "forge-std/src/console2.sol";
-
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -15,6 +13,8 @@ import {IERC7540Operator} from "./interfaces/IERC7540.sol";
 import {VaultCore} from "./vault/VaultCore.sol";
 import {VaultAuth} from "./vault/VaultOperatorAuth.sol";
 import {VaultRedeem} from "./vault/VaultRedeem.sol";
+import {SingleStrategyManager} from "./vault/SingleStrategyManager.sol";
+import {VaultDefaultChecker} from "./vault/VaultDefaultChecker.sol";
 
 /**
  * @title VaultaireVault
@@ -35,8 +35,16 @@ contract VaultaireVault is VaultAuth, VaultRedeem {
         ERC7575Share share_,
         IDAO _dao,
         uint32 _timelock,
-        uint256 _minVaultShareBps
-    ) VaultCore(asset_, share_, _dao, _minVaultShareBps) VaultAuth("VaultaireVault", "1") VaultRedeem(_timelock) {
+        uint256 _minVaultShareBps,
+        address _priceFeed,
+        int256 _minDefaultPriceThreshold
+    )
+        VaultCore(asset_, share_, _minVaultShareBps)
+        VaultAuth("VaultaireVault", "1")
+        VaultRedeem(_timelock)
+        SingleStrategyManager(_dao)
+        VaultDefaultChecker(_priceFeed, _minDefaultPriceThreshold)
+    {
         // Constructor logic is handled by parent contracts
     }
 
