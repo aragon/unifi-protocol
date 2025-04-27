@@ -49,6 +49,11 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
      */
     error InsufficientRedeemableBalance(address owner, uint256 requested, uint256 available);
 
+    /**
+     * @dev Vault paused, can't execute operation
+     */
+    error Paused();
+
     constructor(uint32 _minTimelock) {
         minTimelock = _minTimelock;
     }
@@ -74,6 +79,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
     // @inheritdoc IERC7575
     function withdraw(uint256 assets, address receiver, address controller) public virtual override returns (uint256) {
+        if (isPaused) revert Paused();
         if (controller != msg.sender && !isOperator[controller][msg.sender]) {
             revert InvalidCaller(msg.sender, controller);
         }
@@ -97,6 +103,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
     // @inheritdoc IERC7575
     function redeem(uint256 shares, address receiver, address controller) public virtual override returns (uint256) {
+        if (isPaused) revert Paused();
         if (controller != msg.sender && !isOperator[controller][msg.sender]) {
             revert InvalidCaller(msg.sender, controller);
         }
@@ -175,6 +182,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         address controller,
         address owner
     ) external override returns (uint256 requestId) {
+        if (isPaused) revert Paused();
         if (owner != msg.sender && !isOperator[owner][msg.sender]) revert InvalidOwner(msg.sender, owner);
 
         uint256 available = _share.balanceOf(owner);
