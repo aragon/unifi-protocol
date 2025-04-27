@@ -47,6 +47,41 @@ contract VaultaireVaultTest is BaseVaultaireTest {
         assertEq(sharesMinted, depositAmount, "Shares minted doesn't match deposit (1:1 ratio expected initially)");
     }
 
+    /// @dev Test basic deposit functionality for two tokens
+    function test_DepositWithTwoTokens() external {
+        uint256 depositAmount = 100 ether;
+
+        // User1 approves and deposits assets into the vault
+        vm.startPrank(user1);
+        asset.approve(address(vault), depositAmount);
+
+        // Expect Deposit event to be emitted
+        vm.expectEmit(true, true, false, true);
+        emit IERC7575.Deposit(user1, user1, depositAmount, depositAmount);
+
+        uint256 sharesMinted = vault.deposit(depositAmount, user1);
+
+        // Check balances after deposit
+        assertEq(asset.balanceOf(address(vault)), depositAmount, "Vault didn't receive assets");
+        assertEq(share.balanceOf(user1), sharesMinted, "User didn't receive shares");
+        assertEq(sharesMinted, depositAmount, "Shares minted doesn't match deposit (1:1 ratio expected initially)");
+
+        // User1 approves and deposits assets into the vault
+        asset2.approve(address(vault2), depositAmount);
+
+        // Expect Deposit event to be emitted
+        vm.expectEmit(true, true, false, true);
+        emit IERC7575.Deposit(user1, user1, depositAmount, depositAmount);
+
+        sharesMinted = vault2.deposit(depositAmount, user1);
+        vm.stopPrank();
+
+        // Check balances after deposit
+        assertEq(asset2.balanceOf(address(vault2)), depositAmount, "Vault didn't receive assets");
+        assertEq(share.balanceOf(user1), sharesMinted * 2, "User didn't receive shares");
+        assertEq(sharesMinted, depositAmount, "Shares minted doesn't match deposit (1:1 ratio expected initially)");
+    }
+
     /// @dev Test mint functionality (deposit with specific shares amount)
     function test_Mint() external {
         uint256 sharesToMint = 50 ether;

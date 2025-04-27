@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
-import { BaseVaultAllocationStrategy } from "./BaseVaultAllocationStrategy.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { VaultaireVault } from "../VaultaireVault.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import {BaseVaultAllocationStrategy} from "./BaseVaultAllocationStrategy.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {VaultaireVault} from "../VaultaireVault.sol";
 
 /**
  * @title ERC4626Strategy
@@ -47,9 +47,7 @@ contract ERC4626Strategy is BaseVaultAllocationStrategy {
         VaultaireVault _vaultaireVault,
         IERC4626 _targetVault,
         IDAO _dao
-    )
-        BaseVaultAllocationStrategy(_underlyingAsset, _vaultaireVault, _dao)
-    {
+    ) BaseVaultAllocationStrategy(_underlyingAsset, _vaultaireVault, _dao) {
         targetVault = IERC4626(_targetVault);
 
         // Verify the target vault uses the same asset

@@ -85,15 +85,11 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
-        // Claiming partially introduces precision loss. The user therefore receives a rounded down amount,
-        // while the claimable balance is reduced by a rounded up amount.
-        uint256 shares = assets.mulDiv(request.shares, request.assets, Math.Rounding.Floor);
-        uint256 sharesUp = assets.mulDiv(request.shares, request.assets, Math.Rounding.Ceil);
+        uint256 shares = _convertToShares(request.assets, Math.Rounding.Floor);
         request.assets -= assets;
-        request.shares = request.shares > sharesUp ? request.shares - sharesUp : 0;
+        request.shares -= request.shares < shares ? request.shares : shares;
 
         _beforeWithdraw(assets);
-
         _withdraw(_msgSender(), receiver, controller, assets, shares);
 
         return shares;
@@ -112,12 +108,12 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
 
         RedemptionRequest storage request = _pendingRedemption[controller];
 
-        uint256 assets = shares.mulDiv(request.assets, request.shares, Math.Rounding.Floor);
-        uint256 assetsUp = shares.mulDiv(request.assets, request.shares, Math.Rounding.Ceil);
+        uint256 assets = _convertToAssets(request.shares, Math.Rounding.Floor);
 
-        request.assets = request.assets > assetsUp ? request.assets - assetsUp : 0;
+        request.assets -= request.assets < assets ? request.assets : assets;
         request.shares -= shares;
 
+        _beforeWithdraw(assets);
         _withdraw(_msgSender(), receiver, controller, assets, shares);
 
         return assets;
@@ -167,7 +163,7 @@ abstract contract VaultRedeem is IERC7540Redeem, VaultCore, VaultOperator {
         uint256 assets,
         uint256 shares
     ) internal virtual {
-        _totalPendingRedeemAssets -= assets;
+        _totalPendingRedeemAssets -= _totalPendingRedeemAssets < assets ? _totalPendingRedeemAssets : assets;
         SafeERC20.safeTransfer(_asset, receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);

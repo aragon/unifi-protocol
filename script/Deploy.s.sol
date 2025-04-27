@@ -5,6 +5,8 @@ import {VaultaireVault} from "../src/VaultaireVault.sol";
 import {ERC7575Share} from "../src/ERC7575Share.sol";
 
 import {MintableERC20} from "../tests/mocks/MintableERC20.sol";
+import {MockERC4626} from "../tests/mocks/MockERC4626.sol";
+import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
 
 import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 
@@ -13,50 +15,65 @@ import {console2} from "forge-std/src/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
-    function run()
-        public
-        broadcast
-        returns (
-            ERC7575Share share,
-            VaultaireVault fUSDCVault,
-            VaultaireVault fUSDsVault,
-            VaultaireVault fUSDTVault,
-            VaultaireVault fGHOVault
-        )
-    {
+    VaultaireVault fUSDCVault;
+    VaultaireVault fUSDSVault;
+    VaultaireVault fUSDTVault;
+    VaultaireVault fGHOVault;
+
+    function run() public broadcast {
         address dao = vm.envAddress("DAO");
         address user = vm.envAddress("USER");
-        uint32 vaultTimestamp = uint32(vm.envUint("VAULT_TIMESTAMP"));
-        uint256 minVaultShareBps = vm.envUint("MIN_VAULT_SHARE_BPS");
-        address tokenBridge = address(this);
 
         // 1. Deploying Mock Tokens
-        MintableERC20 asset1 = new MintableERC20(broadcaster, "fakeUSDC", "fUSDC", 18);
-        console2.log("fake USDC: ", address(asset1));
-
+        MintableERC20 asset1 = new MintableERC20(broadcaster, "fakeUSDC", "fUSDC", 6);
         MintableERC20 asset2 = new MintableERC20(broadcaster, "fakeUSDs", "fUSDs", 18);
-        console2.log("fake USDs: ", address(asset2));
-
         MintableERC20 asset3 = new MintableERC20(broadcaster, "fakeUSDT", "fUSDT", 18);
-        console2.log("fake USDT: ", address(asset3));
+        MintableERC20 asset4 = new MintableERC20(broadcaster, "fakeGHO", "fGHO", 6);
 
-        MintableERC20 asset4 = new MintableERC20(broadcaster, "fakeGHO", "fGHO", 18);
-        console2.log("fake GHO: ", address(asset4));
-
-        asset1.mint(user, 100 ether);
+        asset1.mint(user, 100 ether / 10 ** 6);
         asset2.mint(user, 75 ether);
         asset3.mint(user, 50 ether);
-        asset4.mint(user, 25 ether);
+        asset4.mint(user, (25 ether / 10) * 6);
 
         // 1. Deploying the 7575Share
-        share = new ERC7575Share(tokenBridge, IDAO(dao));
+        ERC7575Share share = new ERC7575Share(address(this), IDAO(dao));
 
         // 2. Deploying the first vault
-        fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-        fUSDsVault = new VaultaireVault(asset2, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-        fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
-        fGHOVault = new VaultaireVault(asset4, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+        {
+            uint32 vaultTimestamp = uint32(vm.envUint("VAULT_TIMESTAMP"));
+            uint256 minVaultShareBps = vm.envUint("MIN_VAULT_SHARE_BPS");
 
-        // 3. I need to manually call the DAO to assign the permissions for now
+            fUSDCVault = new VaultaireVault(asset1, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+            fUSDSVault = new VaultaireVault(asset2, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+            fUSDTVault = new VaultaireVault(asset3, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+            fGHOVault = new VaultaireVault(asset4, share, IDAO(dao), vaultTimestamp, minVaultShareBps);
+        }
+
+        // 3. Deploying any lending vaults we might want
+        MockERC4626 fUSDClendingVault = new MockERC4626(address(asset1));
+        ERC4626Strategy fUSDCstrategy = new ERC4626Strategy(asset1, fUSDCVault, fUSDClendingVault, IDAO(dao));
+        MockERC4626 fUSDSlendingVault = new MockERC4626(address(asset2));
+        ERC4626Strategy fUSDSstrategy = new ERC4626Strategy(asset2, fUSDSVault, fUSDSlendingVault, IDAO(dao));
+
+        // 4. I need to manually call the DAO to assign the permissions for now
+        console2.log("NEXT_PUBLIC_DAO=", dao);
+
+        console2.log("NEXT_PUBLIC_USDC=", address(asset1));
+        console2.log("NEXT_PUBLIC_USDT=", address(asset3));
+        console2.log("NEXT_PUBLIC_USDS=", address(asset2));
+        console2.log("NEXT_PUBLIC_GHO=", address(asset4));
+
+        console2.log("NEXT_PUBLIC_UUSD=", address(share));
+
+        console2.log("NEXT_PUBLIC_USDC_VAULT=", address(fUSDCVault));
+        console2.log("NEXT_PUBLIC_USDT_VAULT=", address(fUSDTVault));
+        console2.log("NEXT_PUBLIC_USDS_VAULT=", address(fUSDSVault));
+        console2.log("NEXT_PUBLIC_GHO_VAULT=", address(fGHOVault));
+
+        console2.log("NEXT_PUBLIC_USDC_LENDING_VAULT=", address(fUSDClendingVault));
+        console2.log("NEXT_PUBLIC_USDC_STRATEGY=", address(fUSDCstrategy));
+
+        console2.log("NEXT_PUBLIC_USDS_LENDING_VAULT=", address(fUSDSlendingVault));
+        console2.log("NEXT_PUBLIC_USDS_STRATEGY=", address(fUSDSstrategy));
     }
 }

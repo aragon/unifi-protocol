@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
+import {console2} from "forge-std/src/console2.sol";
 
-import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
-import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
+import {IERC7575} from "../src/interfaces/IERC7575.sol";
 
 contract SingleStrategyManagerTest is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.
@@ -47,22 +48,28 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
-        assertEq(asset.balanceOf(address(vault)), 2_000_000_000_000_000_000);
-        assertEq(asset.balanceOf(address(lendingVault)), 8_000_000_000_000_000_000);
-        assertEq(lendingVault.balanceOf(address(strategy)), 8_000_000_000_000_000_000);
-        assertEq(vault.totalAssets(), depositAmount);
+        assertEq(asset.balanceOf(address(vault)), 2e18, "Number of assets of vault doesn't match");
+        assertEq(asset.balanceOf(address(lendingVault)), 8e18, "Lending vault number of assets doesn't match");
+        assertEq(
+            lendingVault.balanceOf(address(strategy)),
+            lendingVault.convertToShares(8e18),
+            "Lending vault balance of doesn't match"
+        );
+        assertEq(vault.totalAssets(), depositAmount, "Total asset don't match");
 
         // User1 withdraws assets from the vault
         vm.startPrank(user1);
-        vault.requestRedeem(1 ether, user1, user1);
+        uint256 sharesToRedeem = vault.convertToShares(1e18);
+        vault.requestRedeem(sharesToRedeem, user1, user1);
         vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
-        vault.withdraw(1 ether, user1, user1);
+        uint256 assetsRedeemed = vault.redeem(sharesToRedeem, user1, user1); // withdraw is in assets, not shares
         vm.stopPrank();
 
-        assertEq(vault.totalAssets(), depositAmount - 1 ether, "Vault total assets should be depositAmount - 1 ether");
-        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault balance should be 2 ether");
-        assertEq(asset.balanceOf(address(lendingVault)), 7 ether, "Lending vault balance should be 7 ether");
-        assertEq(lendingVault.balanceOf(address(strategy)), 7 ether, "Strategy balance should be 7 ether");
+        assertEq(assetsRedeemed, 1e18, "Redeemed assets should be 1e18");
+        assertEq(vault.totalAssets(), depositAmount - 1e18, "Vault total assets should be depositAmount - 1 ether");
+        assertEq(asset.balanceOf(address(vault)), 1.8e18, "Vault balance should be 1.8 ether");
+        assertEq(asset.balanceOf(address(lendingVault)), 7.2e18, "Lending vault balance should be 7 ether");
+        assertEq(lendingVault.balanceOf(address(strategy)), 7.2e18, "Strategy balance should be 7 ether");
     }
 
     function test_VaultStrategyWithdrawWithDeallocation() external {
@@ -106,6 +113,17 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
+        assertEq(
+            asset.balanceOf(address(vault)),
+            2e18,
+            "After changing ratio to 60%, vault should hold 40% of initial deposit"
+        );
+        assertEq(
+            asset.balanceOf(address(lendingVault)),
+            8e18,
+            "After changing ratio to 60%, lending vault should hold 60% of initial deposit"
+        );
+
         // Change ratio to 60%
         vm.prank(address(dao));
         vault.setInvestmentRatio(6000);
@@ -141,14 +159,15 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
 
         // Request partial withdrawal
-        vault.requestRedeem(withdrawAmount, user1, user1);
+        uint256 withdrawAmountInShares = vault.convertToShares(withdrawAmount);
+        vault.requestRedeem(withdrawAmountInShares, user1, user1);
         vm.warp(block.timestamp + REDEMPTION_TIMELOCK + 1);
         vault.withdraw(withdrawAmount, user1, user1);
         vm.stopPrank();
 
         assertEq(vault.totalAssets(), depositAmount - withdrawAmount, "Total assets should be reduced");
-        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault balance should be reduced proportionally");
-        assertEq(asset.balanceOf(address(lendingVault)), 3 ether, "Strategy balance should be reduced proportionally");
+        assertEq(asset.balanceOf(address(vault)), 1e18, "Vault balance should be reduced proportionally");
+        assertEq(asset.balanceOf(address(lendingVault)), 4e18, "Strategy balance should be reduced proportionally");
     }
 
     function test_ZeroInvestmentRatio() external {
@@ -205,15 +224,19 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
         vault.deposit(depositAmount, user1);
         vm.stopPrank();
 
+        assertEq(asset.balanceOf(address(vault)), 1 ether, "1: Vault should hold 20% of total deposits");
+        assertEq(asset.balanceOf(address(lendingVault)), 4 ether, "1: Strategy should hold 80% of total deposits");
+        assertEq(vault.totalAssets(), depositAmount, "1: Total assets should reflect both deposits");
+
         // Second deposit
         vm.startPrank(user2);
         asset.approve(address(vault), depositAmount);
         vault.deposit(depositAmount, user2);
         vm.stopPrank();
 
-        assertEq(asset.balanceOf(address(vault)), 2 ether, "Vault should hold 20% of total deposits");
-        assertEq(asset.balanceOf(address(lendingVault)), 8 ether, "Strategy should hold 80% of total deposits");
-        assertEq(vault.totalAssets(), depositAmount * 2, "Total assets should reflect both deposits");
+        assertEq(asset.balanceOf(address(vault)), 2 ether, "2: Vault should hold 20% of total deposits");
+        assertEq(asset.balanceOf(address(lendingVault)), 8 ether, "2: Strategy should hold 80% of total deposits");
+        assertEq(vault.totalAssets(), depositAmount * 2, "2: Total assets should reflect both deposits");
     }
 
     function test_StrategyWithdrawWithFullDeallocation() external {

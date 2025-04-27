@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
-import { DaoAuthorizable } from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
-import { IVaultAllocationStrategy } from "../interfaces/IVaultAllocationStrategy.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {console2} from "forge-std/src/console2.sol";
+
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
+import {DaoAuthorizable} from "@aragon/commons/permission/auth/DaoAuthorizable.sol";
+import {IVaultAllocationStrategy} from "../interfaces/IVaultAllocationStrategy.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title SingleStrategyManager
@@ -19,7 +21,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
     // Determines how much of new deposits get allocated to the strategy
     // uint256 public investmentRatio = 8000; // To 80%
     uint256 public investmentRatio = 0; // Default 0%
-    uint256 public currentlyInvested = 0;
+    uint256 public currentlyInvested = 0; // In assets
 
     event PortfolioRebalanced(uint256 investmentRatio, uint256 assetsAllocated, uint256 assetsDeallocated);
     event StrategySet(IVaultAllocationStrategy strategy);
@@ -35,7 +37,7 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      */
     error RatioExceeds100Percent(uint256 ratio);
 
-    constructor(IDAO dao_) DaoAuthorizable(dao_) { }
+    constructor(IDAO dao_) DaoAuthorizable(dao_) {}
 
     /**
      * @notice Assigns a new strategy address (or updates the existing one).
@@ -81,7 +83,20 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
 
         IERC20(asset()).approve(address(_strategy), amountToInvest);
         totalAllocated = _strategy.invest(amountToInvest);
-        currentlyInvested += totalAllocated;
+        currentlyInvested += amountToInvest;
+
+        return totalAllocated;
+    }
+
+    /**
+     * @notice Allocates `assets` to the active strategy without current investment ratio.
+     */
+    function _directAllocation(uint256 assets) internal returns (uint256 totalAllocated) {
+        if (address(_strategy) == address(0) || assets == 0) return 0;
+
+        IERC20(asset()).approve(address(_strategy), assets);
+        totalAllocated = _strategy.invest(assets);
+        currentlyInvested += assets;
 
         return totalAllocated;
     }
@@ -90,10 +105,25 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
      * @notice Deallocates `assets` from the active strategy.
      */
     function _deallocate(uint256 assets) internal returns (uint256 totalDeallocated) {
-        if (address(_strategy) == address(0)) return 0;
+        if (address(_strategy) == address(0) || currentlyInvested == 0) return 0;
+
+        uint256 amountToDeallocate = (assets * investmentRatio) / 10_000;
+        if (amountToDeallocate == 0) return 0;
+
+        totalDeallocated = _strategy.divest(amountToDeallocate);
+        currentlyInvested -= amountToDeallocate;
+
+        return totalDeallocated;
+    }
+
+    /**
+     * @notice Deallocates `assets` from the active strategy, without calculating the percentage
+     */
+    function _directDeallocation(uint256 assets) internal returns (uint256 totalDeallocated) {
+        if (address(_strategy) == address(0) || currentlyInvested == 0 || assets == 0) return 0;
 
         totalDeallocated = _strategy.divest(assets);
-        currentlyInvested -= totalDeallocated;
+        currentlyInvested -= assets;
 
         return totalDeallocated;
     }
@@ -138,13 +168,13 @@ abstract contract SingleStrategyManager is DaoAuthorizable {
             }
 
             if (amountToInvest > 0) {
-                assetsAllocated = _strategy.invest(amountToInvest);
+                assetsAllocated = _directAllocation(amountToInvest);
             }
         } else if (strategyBalance > targetStrategyAmount) {
             // Need to deallocate from the strategy
             uint256 amountToDivest = strategyBalance - targetStrategyAmount;
             if (amountToDivest > 0) {
-                assetsDeallocated = _strategy.divest(amountToDivest);
+                assetsDeallocated = _directDeallocation(amountToDivest);
             }
         }
 
