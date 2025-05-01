@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { Test } from "forge-std/src/Test.sol";
+import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/TestHelperOz5.sol";
 
-import { VaultaireVault } from "../src/VaultaireVault.sol";
-import { ERC7575Share } from "../src/ERC7575Share.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { MockERC4626 } from "./mocks/MockERC4626.sol";
+import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {MockERC4626} from "./mocks/MockERC4626.sol";
 
-import { MintableERC20 } from "./mocks/MintableERC20.sol";
-import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
-import { DAO } from "@aragon/osx/core/dao/DAO.sol";
-import { createTestDAO } from "./mocks/MockDAO.sol";
-import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStrategy.sol";
+import {MintableERC20} from "./mocks/MintableERC20.sol";
+import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
+import {DAO} from "@aragon/osx/core/dao/DAO.sol";
+import {createTestDAO} from "./mocks/MockDAO.sol";
+import {IVaultAllocationStrategy} from "../src/interfaces/IVaultAllocationStrategy.sol";
 
 /* solhint-disable max-states-count */
-contract BaseVaultaireTest is Test {
+contract BaseVaultaireTest is TestHelperOz5 {
     // Constants
     uint256 public constant INITIAL_ASSETS = 10_000 ether;
     uint256 public constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
@@ -33,6 +33,8 @@ contract BaseVaultaireTest is Test {
     MintableERC20 public asset2;
     MintableERC20 public assetWithDecimals;
     ERC7575Share public share;
+    uint32 public shareAEid = 1;
+    uint32 public shareBEid = 2;
     VaultaireVault public vault;
     VaultaireVault public vault2;
     VaultaireVault public vaultWithDecimals;
@@ -43,7 +45,10 @@ contract BaseVaultaireTest is Test {
     MockERC4626 public lendingVault2;
     MockERC4626 public lendingVaultWithDecimals;
 
+    uint256 public decimalShift;
+
     constructor() {
+        setUpEndpoints(2, LibraryType.UltraLightNode);
         // Create test accounts
         deployer = makeAddr("deployer");
         user1 = makeAddr("user1");
@@ -58,14 +63,21 @@ contract BaseVaultaireTest is Test {
         vm.stopPrank();
 
         // Deploy share token
-        vm.startPrank(deployer);
-        share = new ERC7575Share(address(0), dao); // Token bridge is not needed for tests
+        vm.startPrank(address(dao));
+        address bridgeEndpoint = endpoints[shareAEid];
+        share = ERC7575Share(_deployOApp(type(ERC7575Share).creationCode, abi.encode(bridgeEndpoint, address(dao))));
         vm.stopPrank();
 
         // Deploy vault
         vm.startPrank(deployer);
         vault = new VaultaireVault(
-            IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
+            IERC20(address(asset)),
+            share,
+            dao,
+            REDEMPTION_TIMELOCK,
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 
@@ -95,7 +107,13 @@ contract BaseVaultaireTest is Test {
         // Deploy vault 2
         vm.startPrank(deployer);
         vault2 = new VaultaireVault(
-            IERC20(address(asset2)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
+            IERC20(address(asset2)),
+            share,
+            dao,
+            REDEMPTION_TIMELOCK,
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 
@@ -156,6 +174,7 @@ contract BaseVaultaireTest is Test {
         vm.startPrank(deployer);
         assetWithDecimals.mint(user1, INITIAL_ASSETS);
         assetWithDecimals.mint(user2, INITIAL_ASSETS);
+        decimalShift = 10 ** (18 - assetWithDecimals.decimals());
         vm.stopPrank();
     }
 }

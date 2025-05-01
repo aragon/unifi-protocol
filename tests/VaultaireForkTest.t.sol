@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { Test } from "forge-std/src/Test.sol";
+import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/TestHelperOz5.sol";
 // import { console2 } from "forge-std/src/console2.sol";
 
-import { ERC7575Share } from "../src/ERC7575Share.sol";
-import { VaultaireVault } from "../src/VaultaireVault.sol";
-import { IERC7575 } from "../src/interfaces/IERC7575.sol";
-import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
-import { IVaultAllocationStrategy } from "../src/interfaces/IVaultAllocationStrategy.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
+import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {IERC7575} from "../src/interfaces/IERC7575.sol";
+import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
+import {IVaultAllocationStrategy} from "../src/interfaces/IVaultAllocationStrategy.sol";
 
-import { createTestDAO } from "./mocks/MockDAO.sol";
+import {createTestDAO} from "./mocks/MockDAO.sol";
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { DAO } from "@aragon/osx/core/dao/DAO.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {DAO} from "@aragon/osx/core/dao/DAO.sol";
 
-contract VaultaireVaultForkTest is Test {
+contract VaultaireVaultForkTest is TestHelperOz5 {
     // Constants
     uint256 public constant USDC_INITIAL_ASSETS = 1000e6;
     uint256 public constant USDS_INITIAL_ASSETS = 1000e18;
@@ -34,6 +34,8 @@ contract VaultaireVaultForkTest is Test {
     IERC20 public usdc = IERC20(address(0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913));
     IERC20 public usds = IERC20(address(0x820C137fa70C8691f0e44Dc420a5e53c168921Dc));
     ERC7575Share public share;
+    uint32 public shareAEid = 1;
+    uint32 public shareBEid = 2;
     VaultaireVault public usdcVault;
     VaultaireVault public usdsVault;
     ERC4626Strategy public usdcStrategy;
@@ -44,7 +46,8 @@ contract VaultaireVaultForkTest is Test {
     /* solhint-disable var-name-mixedcase */
     string public BASE_RPC_URL = vm.envString("BASE_RPC_URL");
 
-    function setUp() public virtual {
+    constructor() {
+        setUpEndpoints(2, LibraryType.UltraLightNode);
         // Create test accounts
         deployer = makeAddr("deployer");
         user1 = makeAddr("user1");
@@ -55,7 +58,8 @@ contract VaultaireVaultForkTest is Test {
 
         vm.startPrank(deployer);
         dao = createTestDAO(deployer);
-        share = new ERC7575Share(address(0), dao); // Token bridge is not needed for tests
+        address bridgeEndpoint = endpoints[shareAEid];
+        share = ERC7575Share(_deployOApp(type(ERC7575Share).creationCode, abi.encode(bridgeEndpoint, address(dao))));
 
         // Deploying the vaults
         usdcVault = new VaultaireVault(
@@ -202,7 +206,9 @@ contract VaultaireVaultForkTest is Test {
 
         // Verify pending redeem request
         assertEq(
-            usdcVault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly"
+            usdcVault.pendingRedeemRequest(0, user1),
+            redeemAmount,
+            "Pending redeem request not recorded correctly"
         );
         assertEq(usdcVault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
 
@@ -232,7 +238,9 @@ contract VaultaireVaultForkTest is Test {
 
         // Verify pending redeem request
         assertEq(
-            usdcVault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly"
+            usdcVault.pendingRedeemRequest(0, user1),
+            redeemAmount,
+            "Pending redeem request not recorded correctly"
         );
         assertEq(usdcVault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
 
@@ -251,7 +259,9 @@ contract VaultaireVaultForkTest is Test {
 
         // Verify pending redeem request
         assertEq(
-            usdsVault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly"
+            usdsVault.pendingRedeemRequest(0, user1),
+            redeemAmount,
+            "Pending redeem request not recorded correctly"
         );
         assertEq(usdsVault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
 
@@ -291,10 +301,14 @@ contract VaultaireVaultForkTest is Test {
             "User didn't receive correct assets"
         );
         assertEq(
-            share.balanceOf(user1), (usdcDeposit * 1e12) - redeemAmount, "User's share balance not correctly updated"
+            share.balanceOf(user1),
+            (usdcDeposit * 1e12) - redeemAmount,
+            "User's share balance not correctly updated"
         );
         assertEq(
-            assetsReceived * 1e12, redeemAmount, "Assets received doesn't match redeemed shares (1:1 ratio expected)"
+            assetsReceived * 1e12,
+            redeemAmount,
+            "Assets received doesn't match redeemed shares (1:1 ratio expected)"
         );
     }
 
@@ -422,7 +436,9 @@ contract VaultaireVaultForkTest is Test {
         assertEq(share.balanceOf(user1), 10e18 - redeemAmount, "User didn't send their shares");
         assertEq(usdc.balanceOf(address(usdcVault)), 8e6, "USDC Vault doesn't hold complete amount minus invested");
         assertEq(
-            usdcVault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly"
+            usdcVault.pendingRedeemRequest(0, user1),
+            redeemAmount,
+            "Pending redeem request not recorded correctly"
         );
         assertEq(usdcVault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
         assertEq(
@@ -473,7 +489,9 @@ contract VaultaireVaultForkTest is Test {
 
         // Verify pending redeem request
         assertEq(
-            usdcVault.pendingRedeemRequest(0, user1), redeemAmount, "Pending redeem request not recorded correctly"
+            usdcVault.pendingRedeemRequest(0, user1),
+            redeemAmount,
+            "Pending redeem request not recorded correctly"
         );
         assertEq(usdcVault.claimableRedeemRequest(0, user1), 0, "Should not be claimable yet");
 
@@ -496,7 +514,9 @@ contract VaultaireVaultForkTest is Test {
             "User didn't receive correct assets"
         );
         assertEq(
-            share.balanceOf(user1), (depositAmount * 1e12) - redeemAmount, "User's share balance not correctly updated"
+            share.balanceOf(user1),
+            (depositAmount * 1e12) - redeemAmount,
+            "User's share balance not correctly updated"
         );
 
         assertEq(usdc.balanceOf(address(usdcVault)), 4e6, "Vault shouldn't be drained");

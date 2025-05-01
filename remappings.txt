@@ -4,7 +4,7 @@
 @aragon/commons/=node_modules/@aragon/osx-commons-repo/contracts/src/
 @aragon/osx/=node_modules/@aragon/osx/packages/contracts/src/
 
-forge-std/=node_modules/forge-std/
+forge-std/=node_modules/forge-std/src/
 solmate/=node_modules/solmate/src/
 
 # @openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/

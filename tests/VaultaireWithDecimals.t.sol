@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
 
-import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
-import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
+import {IERC7575} from "../src/interfaces/IERC7575.sol";
 
 contract VaultaireVaultWithDecimalsTest is BaseVaultaireTest {
-    uint256 public decimalShift;
-
-    function setUp() public {
-        decimalShift = 10 ** (18 - assetWithDecimals.decimals());
-        vm.prank(address(dao));
-        vault.setInvestmentRatio(0);
-    }
-
     /// @dev Test if the vault is correctly configured after deployment
     function test_VaultInitialization() external view {
         assertEq(address(vaultWithDecimals.asset()), address(assetWithDecimals), "Incorrect asset address");
@@ -75,11 +67,15 @@ contract VaultaireVaultWithDecimalsTest is BaseVaultaireTest {
 
         // Check balances after mint
         assertEq(
-            assetWithDecimals.balanceOf(address(vaultWithDecimals)), assetsUsed, "Vault didn't receive correct assets"
+            assetWithDecimals.balanceOf(address(vaultWithDecimals)),
+            assetsUsed,
+            "Vault didn't receive correct assets"
         );
         assertEq(share.balanceOf(user2), sharesToMint, "User didn't receive requested shares");
         assertEq(
-            assetsUsed * decimalShift, sharesToMint, "Assets used doesn't match shares (1:1 ratio expected initially)"
+            assetsUsed * decimalShift,
+            sharesToMint,
+            "Assets used doesn't match shares (1:1 ratio expected initially)"
         );
     }
 
@@ -236,7 +232,9 @@ contract VaultaireVaultWithDecimalsTest is BaseVaultaireTest {
     function test_MinVaultShareBps() external {
         // Initial value should match what was set in constructor
         assertEq(
-            vaultWithDecimals.minVaultShareBps(), INITIAL_MIN_VAULT_SHARE_BPS, "Initial minVaultShareBps incorrect"
+            vaultWithDecimals.minVaultShareBps(),
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            "Initial minVaultShareBps incorrect"
         );
 
         // Non-DAO address should not be able to set minVaultShareBps
@@ -284,19 +282,22 @@ contract VaultaireVaultWithDecimalsTest is BaseVaultaireTest {
 
         // Try with a larger redemption that would put us below minVaultShareBps
         uint256 largeRedemption = 95 ether; // 95% redemption
-        uint256 increasedTimelock =
-            vaultWithDecimals.previewRedeemTimelock(vaultWithDecimals.convertToShares(largeRedemption));
+        uint256 increasedTimelock = vaultWithDecimals.previewRedeemTimelock(
+            vaultWithDecimals.convertToShares(largeRedemption)
+        );
         assertTrue(increasedTimelock > REDEMPTION_TIMELOCK, "Timelock should increase for large redemptions");
 
         // Test an even larger redemption
         uint256 veryLargeRedemption = 99 ether; // 90% redemption
-        uint256 maxTimelock =
-            vaultWithDecimals.previewRedeemTimelock(vaultWithDecimals.convertToShares(veryLargeRedemption));
+        uint256 maxTimelock = vaultWithDecimals.previewRedeemTimelock(
+            vaultWithDecimals.convertToShares(veryLargeRedemption)
+        );
         assertTrue(maxTimelock > increasedTimelock, "Timelock should be even higher for very large redemptions");
 
         // Verify actual redemption matches preview
-        uint256 previewedTimelock =
-            vaultWithDecimals.previewRedeemTimelock(vaultWithDecimals.convertToShares(largeRedemption));
+        uint256 previewedTimelock = vaultWithDecimals.previewRedeemTimelock(
+            vaultWithDecimals.convertToShares(largeRedemption)
+        );
         vaultWithDecimals.requestRedeem(vaultWithDecimals.convertToShares(largeRedemption), user1, user1);
 
         VaultRedeem.RedemptionRequest memory redeemRequest = vaultWithDecimals.pendingRedeemRequestData(user1);

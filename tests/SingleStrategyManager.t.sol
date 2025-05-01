@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { BaseVaultaireTest } from "./BaseVaultaireTest.t.sol";
+import {BaseVaultaireTest} from "./BaseVaultaireTest.t.sol";
 
-import { VaultRedeem } from "../src/vault/VaultRedeem.sol";
-import { IERC7575 } from "../src/interfaces/IERC7575.sol";
+import {VaultRedeem} from "../src/vault/VaultRedeem.sol";
+import {IERC7575} from "../src/interfaces/IERC7575.sol";
 
 contract SingleStrategyManagerTest is BaseVaultaireTest {
     /// @dev A function invoked before each test case is run.
-    function setUp() public virtual {
-        vm.prank(address(dao));
-        vault.setInvestmentRatio(8000);
-    }
+    function beforeTestSetup(bytes4 testSelector) public returns (bytes[] memory beforeTestCalldata) {}
 
     /// @dev Test if the vault is correctly configured after deployment
     function test_VaultStrategyDeposit() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
 
         // User1 approves and deposits assets into the vault
@@ -34,6 +33,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_VaultStrategyWithdraw() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
 
         // User1 approves and deposits assets into the vault
@@ -72,6 +73,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_VaultStrategyWithdrawWithDeallocation() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
 
         // User1 approves and deposits assets into the vault
@@ -104,6 +107,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_StrategyAllocationRatioChange() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
 
         // Initial deposit with 80% ratio
@@ -149,6 +154,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_StrategyWithdrawWithPartialDeallocation() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
         uint256 withdrawAmount = 5 ether;
 
@@ -215,6 +222,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_MultipleDepositsWithStrategy() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 5 ether;
 
         // First deposit
@@ -239,6 +248,8 @@ contract SingleStrategyManagerTest is BaseVaultaireTest {
     }
 
     function test_StrategyWithdrawWithFullDeallocation() external {
+        vm.prank(address(dao));
+        vault.setInvestmentRatio(8000);
         uint256 depositAmount = 10 ether;
 
         // Setup: deposit assets

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { VaultaireVault } from "../src/VaultaireVault.sol";
-import { ERC7575Share } from "../src/ERC7575Share.sol";
+import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
 
-import { MintableERC20 } from "../tests/mocks/MintableERC20.sol";
-import { MockERC4626 } from "../tests/mocks/MockERC4626.sol";
-import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
+import {MintableERC20} from "../tests/mocks/MintableERC20.sol";
+import {MockERC4626} from "../tests/mocks/MockERC4626.sol";
+import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
 
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 
-import { BaseScript } from "./Base.s.sol";
-import { console2 } from "forge-std/src/console2.sol";
+import {BaseScript} from "./Base.s.sol";
+import {console2} from "forge-std/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
@@ -36,7 +36,7 @@ contract Deploy is BaseScript {
         asset4.mint(user, (25 ether / 10) * 6);
 
         // 1. Deploying the 7575Share
-        ERC7575Share share = new ERC7575Share(address(this), IDAO(dao));
+        ERC7575Share share = new ERC7575Share(address(this), dao);
 
         // 2. Deploying the first vault
         {

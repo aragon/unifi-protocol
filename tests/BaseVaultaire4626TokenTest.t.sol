@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29;
 
-import { Test } from "forge-std/src/Test.sol";
+import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/TestHelperOz5.sol";
 
-import { Vaultaire4626TokenVault } from "../src/Vaultaire4626TokenVault.sol";
-import { ERC7575Share } from "../src/ERC7575Share.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { MockERC4626 } from "./mocks/MockERC4626.sol";
+import {Vaultaire4626TokenVault} from "../src/Vaultaire4626TokenVault.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {MockERC4626} from "./mocks/MockERC4626.sol";
 
-import { MintableERC20 } from "./mocks/MintableERC20.sol";
-import { DAO } from "@aragon/osx/core/dao/DAO.sol";
-import { createTestDAO } from "./mocks/MockDAO.sol";
+import {MintableERC20} from "./mocks/MintableERC20.sol";
+import {DAO} from "@aragon/osx/core/dao/DAO.sol";
+import {createTestDAO} from "./mocks/MockDAO.sol";
 
-contract BaseVaultaire4626TokenTest is Test {
+contract BaseVaultaire4626TokenTest is TestHelperOz5 {
     // Constants
     uint256 public constant INITIAL_ASSETS = 10_000 ether;
     uint256 public constant INITIAL_MIN_VAULT_SHARE_BPS = 1000;
@@ -28,10 +28,14 @@ contract BaseVaultaire4626TokenTest is Test {
     DAO public dao;
     MintableERC20 public assetCollateral;
     MockERC4626 public asset;
+    uint32 public shareAEid = 1;
+    uint32 public shareBEid = 2;
     ERC7575Share public share;
     Vaultaire4626TokenVault public vault;
 
     constructor() {
+        setUpEndpoints(2, LibraryType.UltraLightNode);
+
         // Create test accounts
         deployer = makeAddr("deployer");
         user1 = makeAddr("user1");
@@ -46,13 +50,20 @@ contract BaseVaultaire4626TokenTest is Test {
 
         // Deploy share token
         vm.startPrank(deployer);
-        share = new ERC7575Share(address(0), dao); // Token bridge is not needed for tests
+        address bridgeEndpoint = endpoints[shareAEid];
+        share = ERC7575Share(_deployOApp(type(ERC7575Share).creationCode, abi.encode(bridgeEndpoint, address(dao))));
         vm.stopPrank();
 
         // Deploy vault
         vm.startPrank(deployer);
         vault = new Vaultaire4626TokenVault(
-            IERC20(address(asset)), share, dao, REDEMPTION_TIMELOCK, INITIAL_MIN_VAULT_SHARE_BPS, address(0), 0
+            IERC20(address(asset)),
+            share,
+            dao,
+            REDEMPTION_TIMELOCK,
+            INITIAL_MIN_VAULT_SHARE_BPS,
+            address(0),
+            0
         );
         vm.stopPrank();
 

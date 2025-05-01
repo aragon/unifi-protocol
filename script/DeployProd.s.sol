@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.29 <0.9.0;
 
-import { VaultaireVault } from "../src/VaultaireVault.sol";
-import { ERC7575Share } from "../src/ERC7575Share.sol";
+import {VaultaireVault} from "../src/VaultaireVault.sol";
+import {ERC7575Share} from "../src/ERC7575Share.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ERC4626Strategy } from "../src/strategies/ERC4626Strategy.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import {ERC4626Strategy} from "../src/strategies/ERC4626Strategy.sol";
 
-import { IDAO } from "@aragon/commons/dao/IDAO.sol";
+import {IDAO} from "@aragon/commons/dao/IDAO.sol";
 
-import { BaseScript } from "./Base.s.sol";
-import { console2 } from "forge-std/src/console2.sol";
+import {BaseScript} from "./Base.s.sol";
+import {console2} from "forge-std/console2.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/guides/scripting-with-solidity
 contract Deploy is BaseScript {
@@ -47,7 +47,7 @@ contract Deploy is BaseScript {
         eUSD = IERC20(vm.envAddress("PROD_EUSD"));
 
         // 1. Deploying the 7575Share
-        ERC7575Share uUSD = new ERC7575Share(address(this), IDAO(dao));
+        ERC7575Share uUSD = new ERC7575Share(address(this), dao);
 
         // 2. Deploying the first vault
         {
@@ -61,16 +61,40 @@ contract Deploy is BaseScript {
             MIN_DEFAULT_PRICE_THRESHOLD = vm.envInt("PROD_MIN_DEFAULT_PRICE_THRESHOLD");
 
             USDCVault = new VaultaireVault(
-                USDC, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDCPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
+                USDC,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDCPriceFeed,
+                MIN_DEFAULT_PRICE_THRESHOLD
             );
             USDTVault = new VaultaireVault(
-                USDT, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDTPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
+                USDT,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDTPriceFeed,
+                MIN_DEFAULT_PRICE_THRESHOLD
             );
             USDSVault = new VaultaireVault(
-                USDS, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, USDSPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
+                USDS,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                USDSPriceFeed,
+                MIN_DEFAULT_PRICE_THRESHOLD
             );
             eUSDVault = new VaultaireVault(
-                eUSD, uUSD, IDAO(dao), vaultTimestamp, minVaultShareBps, eUSDPriceFeed, MIN_DEFAULT_PRICE_THRESHOLD
+                eUSD,
+                uUSD,
+                IDAO(dao),
+                vaultTimestamp,
+                minVaultShareBps,
+                eUSDPriceFeed,
+                MIN_DEFAULT_PRICE_THRESHOLD
             );
         }
 
